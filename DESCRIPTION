@@ -1,0 +1,10 @@
+Package: parSim
+Type: Package
+Title: What the package does (short line)
+Version: 0.1
+Author: Sacha Epskamp
+Maintainer: Sacha Epskamp <mail@sachaepskamp.com>
+Description: Perform flexible simulation studies using one or multiple computer cores. 
+Imports: dplyr, parallel, methods
+Suggests: ggplot2, tidyr
+License: GPL-2
