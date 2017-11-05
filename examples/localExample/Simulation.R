@@ -1,6 +1,8 @@
 # Install the package:
 # library("devtools")
 # install_github("sachaepskamp/parSim")
+
+# Load the package:
 library("parSim")
 
 # Some function we might use:
@@ -9,7 +11,7 @@ bias <- function(x,y){abs(x-y)}
 # Run the simulation:
 Results <- parSim(
   # Any number of conditions:
-  sampleSize = c(50, 100, 250),
+  sampleSize = c(50, 100, 250, 500, 100),
   beta = c(0, 0.5, 1),
   sigma = c(0.25, 0.5, 1),
   
@@ -27,11 +29,11 @@ Results <- parSim(
   
   # R expression:
   expression = {
+    library("qgraph")
     # Load all R packages in the expression if needed
     # library(...)
     
     # Want to debug? Enter browser() and run the function. Only works with nCores = 1!
-    # browser()
     
     # Enter whatever codes you want. I can use the conditions as objects.
     X <- rnorm(sampleSize)
@@ -39,7 +41,7 @@ Results <- parSim(
     fit <- lm(Y ~ X)
     betaEst <- coef(fit)[2]
     Rsquared <- summary(fit)$r.squared
-    
+ 
     # Make a data frame with one row to return results (multple rows is also possible but not reccomended):
     data.frame(
       betaEst = betaEst,
@@ -48,6 +50,9 @@ Results <- parSim(
     )
   }
 )
+
+# Look at results:
+View(Results)
 
 # Analyze the results:
 library("ggplot2")

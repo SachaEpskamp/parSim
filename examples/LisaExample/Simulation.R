@@ -30,7 +30,7 @@ Results <- parSim(
   write = TRUE,
   
   # Name of file:
-  name = paste0("Simulation_v1_",args[1]),
+  name = paste0("Simulation_v2_",args[1]),
   
   # Export objects (only needed when nCores > 1):
   export = c("bias"),

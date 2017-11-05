@@ -54,3 +54,7 @@ Some tips:
 	- Change the file name every time you run a new simulation! Some old files persist. I always use v1, v2, v3 etcetera
 	- Make sure the wall-time is correct
 	- Sometimes more repetitions per computer is better than more computers...
+	
+	
+	
+	
