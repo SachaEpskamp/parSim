@@ -9,7 +9,7 @@ Parallel Simulator
 Takes a set of conditions and an R expression and returns a data frame with simulation results. See details. 
 }
 \usage{
-parSim(..., expression, reps = 1, write = FALSE, name = "parSim", nCores = 1, 
+parSim(..., expression, reps = 1, write = FALSE, name, nCores = 1, 
         export, exclude, debug = FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
