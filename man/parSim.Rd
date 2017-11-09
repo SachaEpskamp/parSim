@@ -65,7 +65,7 @@ Results <- parSim(
   sigma = c(0.25, 0.5, 1),
   
   # Number of repititions?
-  reps = 50,
+  reps = 25, # more is better!
   
   # Parallel?
   nCores = 1,

@@ -3,12 +3,16 @@ parSim <- function(
   expression, # R expression ending in data.frame of results
   reps = 1,
   write = FALSE, # if TRUE, results are written instead returned as data frame
-  name = "parSim",
+  name,
   nCores = 1,
   export, # character string of global objects to export to the cluster.
   exclude, # List with dplyr calls to exclude cases. Written as formula
   debug=FALSE
 ){
+  if (write && missing(name)){
+    stop("Provide the argument 'name' if write = TRUE")
+  }
+  
   # Collect the condiitions:
   dots <- list(...)
   
