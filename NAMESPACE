@@ -2,6 +2,7 @@
 export("parSim")
 import(dplyr)
 import(parallel)
+import(pbapply)
 
 importFrom("methods", "is")
   importFrom("utils", "write.table")
