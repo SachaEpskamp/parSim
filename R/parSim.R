@@ -7,10 +7,22 @@ parSim <- function(
   nCores = 1,
   export, # character string of global objects to export to the cluster.
   exclude, # List with dplyr calls to exclude cases. Written as formula
-  debug=FALSE
+  debug=FALSE,
+  progressbar = TRUE
 ){
   if (write && missing(name)){
     stop("Provide the argument 'name' if write = TRUE")
+  }
+  
+  if (progressbar){
+    PAR_FUN <- pbapply::pblapply
+  } else {
+    if (nCores > 1){
+      PAR_FUN <- parallel::parLapply      
+    } else {
+      PAR_FUN <- lapply
+    }
+
   }
   
   # Collect the condiitions:
@@ -62,7 +74,7 @@ parSim <- function(
     }
     
     # Run the loop:
-    Results <- pblapply(seq_len(totCondition), function(i){
+    Results <- PAR_FUN(seq_len(totCondition), function(i){
       
       if (debug){
         cat("\nRunning iteration:",i," / ",nrow(AllConditions),"\nTime:",as.character(Sys.time()),"\n")
@@ -88,7 +100,7 @@ parSim <- function(
   } else {
     
     # Run the loop:
-    Results <- pblapply(seq_len(totCondition), function(i){
+    Results <- PAR_FUN(seq_len(totCondition), function(i){
       
       if (debug){
         cat("\nRunning iteration:",i," / ",nrow(AllConditions),"\nTime:",as.character(Sys.time()),"\n")
