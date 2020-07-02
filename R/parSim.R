@@ -56,6 +56,11 @@ parSim <- function(
     
     ######################
     ## use Socket clusters
+    if (Sys.getenv("RSTUDIO") == "1" && !nzchar(Sys.getenv("RSTUDIO_TERM")) && 
+        Sys.info()["sysname"] == "Darwin" && gsub("\\..*","",getRversion()) == "4") {
+      parallel:::setDefaultClusterOptions(setup_strategy = "sequential")
+    }
+    
     if (!debug){
       cl <- parallel::makePSOCKcluster(nClust)  
     } else {
