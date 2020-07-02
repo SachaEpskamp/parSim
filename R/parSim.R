@@ -18,7 +18,7 @@ parSim <- function(
     PAR_FUN <- pbapply::pblapply
   } else {
     if (nCores > 1){
-      PAR_FUN <- parallel::parLapply      
+      PAR_FUN <- snow::parLapply      
     } else {
       PAR_FUN <- lapply
     }
@@ -62,20 +62,20 @@ parSim <- function(
     }
     
     if (!debug){
-      cl <- parallel::makePSOCKcluster(nClust)  
+      cl <- snow::makeSOCKcluster(nClust)  
     } else {
-      cl <- parallel::makePSOCKcluster(nClust, outfile = "clusterLOG.txt")
+      cl <- snow::makeSOCKcluster(nClust, outfile = "clusterLOG.txt")
     }
     
     #     # Start clusters:
     #     cl <- makeCluster(getOption("cl.cores", nCores))
     #     
     # Export the sim conditions:
-    parallel::clusterExport(cl, c("AllConditions","expr","debug"), envir = environment())
+    snow::clusterExport(cl, c("AllConditions","expr","debug"), envir = environment())
     
     # Export global objects:
     if (!missing(export)){
-      parallel::clusterExport(cl, export)  
+      snow::clusterExport(cl, export)  
     }
     
     # Run the loop:

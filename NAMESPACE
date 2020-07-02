@@ -1,9 +1,9 @@
 #exportPattern("^[[:alpha:]]+")
 export("parSim")
 import(dplyr)
-import(parallel)
+import(snow)
 import(pbapply)
 
 importFrom("methods", "is")
   importFrom("utils", "write.table")
-  importFrom("snow","setDefaultClusterOptions")
+ 
