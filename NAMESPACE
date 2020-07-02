@@ -6,3 +6,4 @@ import(pbapply)
 
 importFrom("methods", "is")
   importFrom("utils", "write.table")
+  importFrom("snow","setDefaultClusterOptions")

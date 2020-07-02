@@ -9,8 +9,9 @@ Parallel Simulator
 Takes a set of conditions and an R expression and returns a data frame with simulation results. See details. 
 }
 \usage{
-parSim(..., expression, reps = 1, write = FALSE, name, nCores = 1, 
-        export, exclude, debug = FALSE)
+parSim(..., expression, reps = 1, write = FALSE, name, nCores
+                   = 1, export, exclude, debug = FALSE, progressbar =
+                   TRUE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -41,6 +42,7 @@ A list with logical calls to exclude cases. Written as formula.
   \item{debug}{
 Allows for some debugging controls and output. Not recommended. 
 }
+\item{progressbar}{Logical: should a progress bar be shown. Setting this to \code{FALSE} will make simulations much faster!}
 }
 \details{
 The R expression should use object names assigned as conditions, and should return a list with single values, or a data frame. If you want to output more than one row of results per condition, you may return a data frame with multiple rows. When using multiple cores, note that all packages should be loaded in the R expression, all objects needed should be exported using the export object, and you will not see a progress bar. 
