@@ -1,6 +1,6 @@
 #exportPattern("^[[:alpha:]]+")
 export("parSim")
-import(dplyr)
+import(data.table)
 import(snow)
 import(pbapply)
 
