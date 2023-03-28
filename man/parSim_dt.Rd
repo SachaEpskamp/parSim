@@ -6,7 +6,7 @@
 Parallel Simulator data.table version
 }
 \description{
-The function uses the more efficient data.table in its intenal code instead of dplyr, thereby speeding up the function and also allowing researchers to use data.table in the code they want to simulate with parSim to speed up their simulation
+The function uses the more efficient data.table in its intenal code instead of dplyr, thereby speeding up the function itself and also allowing researchers to use data.table  to speed up the code they want to simulate with parSim
 }
 \usage{
 parSim_dt(..., expression)
