@@ -6,7 +6,7 @@
 Parallel Simulator data.table version
 }
 \description{
-parSim function does not support the use of data.table functions in the R expression it takes in. parSim_dt allows you use the more efficient data.table functions to speed up the simulation and returns a data table of simulation results. See details
+The function uses the more efficient data.table in its intenal code instead of dplyr, thereby speeding up the function and also allowing researchers to use data.table in the code they want to simulate with parSim to speed up their simulation
 }
 \usage{
 parSim_dt(..., expression)
@@ -21,7 +21,7 @@ All the arguments that you can use in \code{\link[parSim]{parSim}}
   }
 }
 \details{
-
+The function uses data.table in its intenal code instead of dplyr, thereby speeding up the simulation and allowing researchers to use data.table in the code they want to simulate with parSim
 }
 \value{
 A data table with every simulation as a row

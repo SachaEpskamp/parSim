@@ -5,3 +5,6 @@ man/.Rhistory
 parSim_dt.Rproj
 R/.DS_Store
 R/test_filter.R
+.Rproj.user
+.Rbuildignore
+.Rhistory
