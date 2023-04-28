@@ -1,9 +1,10 @@
 #exportPattern("^[[:alpha:]]+")
 export("parSim")
+import(data.table)
 import(dplyr)
 import(snow)
 import(pbapply)
 
 importFrom("methods", "is")
-  importFrom("utils", "write.table")
+  importFrom("data.table", "fwrite")
  
