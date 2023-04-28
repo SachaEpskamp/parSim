@@ -1,5 +1,6 @@
 #exportPattern("^[[:alpha:]]+")
 export("parSim")
+export("parSim_dt")
 import(data.table)
 import(dplyr)
 import(snow)
