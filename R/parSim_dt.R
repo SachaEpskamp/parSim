@@ -11,20 +11,6 @@ parSim_dt <- function(
     progressbar = TRUE
 ){
   
-  # load the data.table package
-  if (!require(data.table)) {
-    
-    message("Installing data.table package...")
-    install.packages("data.table")
-    
-    library(data.table)
-    
-  } else {
-    
-    library(data.table)
-    
-  }
-  
   
   if (write && missing(name)){
     stop("Provide the argument 'name' if write = TRUE")
@@ -86,8 +72,8 @@ parSim_dt <- function(
     #     
     # Export the sim conditions:
     snow::clusterExport(cl, c("AllConditions","expr","debug"), envir = environment())
-    snow::clusterEvalQ(cl, library(data.table))
-    
+    snow::clusterEvalQ(cl, requireNamespace("data.table", quietly = TRUE))
+  
     # Export global objects:
     if (!missing(export)){
       snow::clusterExport(cl, export)  
