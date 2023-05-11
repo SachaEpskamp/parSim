@@ -7,7 +7,7 @@
 Parallel Simulator
 }
 \description{
-Takes a set of conditions and an R expression and returns a data frame with simulation results. parSim is based on dplyr functions and parSim_dt is based on data.table. See details.
+Takes a set of conditions and an R expression and returns a data frame with simulation results. parSim is based on dplyr functions, and if you want to use the data.table package to make your simulation a bit faster, use  parSim_dt. See details.
 }
 \usage{
 parSim(..., expression, reps = 1, write = FALSE, name, 
