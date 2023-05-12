@@ -7,6 +7,6 @@ Maintainer: Sacha Epskamp <mail@sachaepskamp.com>
 Description: Perform flexible simulation studies using one or multiple computer cores.
           The package is set up to be usable on high-performance clusters in addition
           to being run locally, see examples on <https://github.com/SachaEpskamp/parSim>.
-Imports: dplyr, parallel, methods, pbapply, snow
+Imports: dplyr, methods, pbapply, snow, data.table, utils
 Suggests: ggplot2, tidyr
 License: GPL-2

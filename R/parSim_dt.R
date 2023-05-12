@@ -11,20 +11,6 @@ parSim_dt <- function(
     progressbar = TRUE
 ){
   
-  # load the data.table package
-  if (!require(data.table)) {
-    
-    message("Installing data.table package...")
-    install.packages("data.table")
-    
-    library(data.table)
-    
-  } else {
-    
-    library(data.table)
-    
-  }
-  
   
   if (write && missing(name)){
     stop("Provide the argument 'name' if write = TRUE")
@@ -86,8 +72,8 @@ parSim_dt <- function(
     #     
     # Export the sim conditions:
     snow::clusterExport(cl, c("AllConditions","expr","debug"), envir = environment())
-    snow::clusterEvalQ(cl, library(data.table))
-    
+    snow::clusterEvalQ(cl, requireNamespace("data.table", quietly = TRUE))
+  
     # Export global objects:
     if (!missing(export)){
       snow::clusterExport(cl, export)  
@@ -106,9 +92,9 @@ parSim_dt <- function(
         return(data.table(error = TRUE, errorMessage = as.character(tryRes), id = AllConditions$id[i]))
       }
       
-      df <- as.data.table(tryRes, keep.rownames = TRUE)
-      df[, `:=` (id = AllConditions$id[i], error = FALSE, errorMessage = '')]
-      df
+      dt <- as.data.table(tryRes, keep.rownames = TRUE)
+      dt[, `:=` (id = AllConditions$id[i], error = FALSE, errorMessage = '')]
+      dt
     }, cl = cl)
     
     # Stop the cluster:
@@ -126,12 +112,12 @@ parSim_dt <- function(
       
       tryRes <- try(eval(expr, envir = AllConditions[i]), silent = TRUE)
       if (is(tryRes, "try-error")) {
-        return(data.table(error = TRUE, errorMessage = as.character(tryRes), id = AllConditions$id[i]))
+        return(list(error = TRUE, errorMessage = as.character(tryRes), id = AllConditions$id[i]))
       }
       
-      df <- as.data.table(tryRes, keep.rownames = TRUE)
-      df[, `:=` (id = AllConditions$id[i], error = FALSE, errorMessage = '')]
-      df
+      dt <- as.data.table(tryRes, keep.rownames = TRUE)
+      dt[, `:=` (id = AllConditions$id[i], error = FALSE, errorMessage = '')]
+      dt
     })
   }
   
@@ -139,6 +125,7 @@ parSim_dt <- function(
   Results <- rbindlist(Results, fill = TRUE)
   Results[, errorMessage := as.character(errorMessage)]
   
+  # left-join results to conditions
   AllResults <- merge(AllConditions, Results, by = "id", all.x = TRUE)
   
   if (write) {

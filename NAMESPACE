@@ -1,11 +1,14 @@
 #exportPattern("^[[:alpha:]]+")
 export("parSim")
 export("parSim_dt")
+import(dplyr, except = c(first, last, between))
 import(data.table)
-import(dplyr)
 import(snow)
 import(pbapply)
 
 importFrom("methods", "is")
-  importFrom("data.table", "fwrite")
+importFrom("utils", "write.table")
+
+
+
  
