@@ -121,12 +121,10 @@ parSim_dt <- function(
     })
   }
   
-  # FIXME: SE: Dirty fix for now
-  errorMessage <- NULL
   
   # merge the results into a data.table
   Results <- rbindlist(Results, fill = TRUE)
-  Results[, errorMessage := as.character(errorMessage)]
+  Results[, errorMessage = as.character(Results$errorMessage)]
   
   # left-join results to conditions
   AllResults <- merge(AllConditions, Results, by = "id", all.x = TRUE)
