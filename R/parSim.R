@@ -42,10 +42,13 @@ parSim <- function(
         )
     )
 
+    # Capture the exclusion expression.
+    exclude <- substitute(exclude)
+
     # If the user wants to exclude certain conditions.
     if (!is.null(exclude)) {
         # Dispose of the excluded conditions.
-        design <- design[!eval(substitute(exclude), design), ]
+        design <- design[!eval(exclude, design), ]
     }
 
     # Get the total number of conditions.
