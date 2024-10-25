@@ -40,6 +40,11 @@ or \code{beta} is equal to \code{0}. Similarly, \code{exclude = sample_size == 1
 equal to \code{0}. Defaults to \code{NULL} (i.e., no simulation conditions are
 excluded).}
 
+\item{exports}{A character string containing the names of the objects to be
+exported to the parallel backend. This argument is only relevant when using
+parallel execution (i.e., \code{cores > 1}). Defaults to \code{NULL} (i.e., indicating
+that no objects are to be exported).}
+
 \item{packages}{A character vector containing the names of the packages to be
 loaded on the parallel backend. For example \code{packages = c("bootnet", "qgraph")}. This argument is only relevant when using parallel execution
 (i.e., \code{cores > 1}). Defaults to \code{NULL} (i.e., indicating that no packages
@@ -60,14 +65,9 @@ backend with the specified number of cores. Defaults to \code{1}.}
 
 \item{progress}{A logical value indicating whether to show a progress bar
 while running the simulation. Defaults to \code{TRUE}.}
-
-\item{export}{A character string containing the names of the objects to be
-exported to the parallel backend. This argument is only relevant when using
-parallel execution (i.e., \code{cores > 1}). Defaults to \code{NULL} (i.e., indicating
-that no objects are to be exported).}
 }
 \value{
-The \code{\link[=parSim]{parSim()}} function returns a \code{\link[base:data.frame]{base::data.frame}} with the
+The \code{\link{parSim}} function returns a \code{\link[base:data.frame]{base::data.frame}} with the
 results of every iteration as a row.
 }
 \description{
