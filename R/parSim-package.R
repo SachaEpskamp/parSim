@@ -15,6 +15,13 @@
 #' consult its documentation at [`parabar::configure_bar`] for more information
 #' on how to use it.
 #'
+#' @param type A character string specifying the type of progress bar to be used
+#'  with compatible [`backends`][`parabar::Backend`]. Possible values are
+#' `"modern"` and `"basic"`. The default value is `"modern"`.
+#'
+#' @param ... A list of named arguments used to configure the progress bar. See
+#' the **Details** section for more information.
+#'
 #' @importFrom parabar configure_bar
 #' @name configure_bar
 #'
