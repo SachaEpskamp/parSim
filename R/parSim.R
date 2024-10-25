@@ -33,7 +33,7 @@
 #' equal to `0`. Defaults to `NULL` (i.e., no simulation conditions are
 #' excluded).
 #'
-#' @param export A character string containing the names of the objects to be
+#' @param exports A character string containing the names of the objects to be
 #' exported to the parallel backend. This argument is only relevant when using
 #' parallel execution (i.e., `cores > 1`). Defaults to `NULL` (i.e., indicating
 #' that no objects are to be exported).
