@@ -7,7 +7,17 @@
 
 # Re-exported functions for convenience.
 
+#' @title Configure The Progress Bar
+#'
+#' @description
+#' This function can be used to conveniently configure the progress bar. It is
+#' exported for convenience from the [`parabar::parabar`] package. Please
+#' consult its documentation at [`parabar::configure_bar`] for more information
+#' on how to use it.
+#'
 #' @importFrom parabar configure_bar
+#' @name configure_bar
+#'
 #' @export
 parabar::configure_bar
 
