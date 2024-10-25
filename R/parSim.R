@@ -70,7 +70,7 @@
 #' should be exported via the `export` argument.
 #'
 #' @return
-#' The [parSim::parSim()] function returns a [`base::data.frame`] with the
+#' The [`parSim::parSim`] function returns a [`base::data.frame`] with the
 #' results of every iteration as a row.
 #'
 #' @examples
