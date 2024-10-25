@@ -455,7 +455,7 @@ parSim <- function(
         }
 
         # Otherwise write the results.
-        write.table(x = output, file = save, row.names = FALSE)
+        utils::write.table(x = output, file = save, row.names = FALSE)
 
         # Inform the user about the file location.
         message(paste0("Saved results at location: '", save, "'."))
