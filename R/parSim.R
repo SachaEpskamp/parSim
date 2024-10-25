@@ -33,7 +33,7 @@
 #' equal to `0`. Defaults to `NULL` (i.e., no simulation conditions are
 #' excluded).
 #'
-#' @param export A character string containing the names of the objects to be
+#' @param exports A character string containing the names of the objects to be
 #' exported to the parallel backend. This argument is only relevant when using
 #' parallel execution (i.e., `cores > 1`). Defaults to `NULL` (i.e., indicating
 #' that no objects are to be exported).
@@ -70,7 +70,7 @@
 #' should be exported via the `export` argument.
 #'
 #' @return
-#' The [parSim::parSim()] function returns a [`base::data.frame`] with the
+#' The [`parSim::parSim`] function returns a [`base::data.frame`] with the
 #' results of every iteration as a row.
 #'
 #' @examples
@@ -455,7 +455,7 @@ parSim <- function(
         }
 
         # Otherwise write the results.
-        write.table(x = output, file = save, row.names = FALSE)
+        utils::write.table(x = output, file = save, row.names = FALSE)
 
         # Inform the user about the file location.
         message(paste0("Saved results at location: '", save, "'."))
