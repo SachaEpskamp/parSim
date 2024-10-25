@@ -10,3 +10,17 @@
 #' @importFrom parabar configure_bar
 #' @export
 parabar::configure_bar
+
+
+#' @title
+#' Parallel Simulation Studies
+#'
+#' @description
+#' Perform flexible simulation studies using one or multiple computer cores. The
+#' package is set up to be usable on high-performance clusters in addition to
+#' being run locally (i.e., see the package vignettes for more information).
+#'
+#' @aliases parSim-package
+#'
+#' @keywords internal
+"_PACKAGE"
