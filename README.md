@@ -1,85 +1,145 @@
-# Parallel Simulator Function for R
+<h1 align="center">parSim</h1>
 
-## Tips for setting up a simulation study
+<p align="center">
+    <a href="https://www.r-pkg.org/pkg/parSim"><img src="https://www.r-pkg.org/badges/version/parSim" alt="CRAN version"/></a>
+    <a href="https://cran.r-project.org/web/checks/check_results_parSim.html"><img src="https://badges.cranchecks.info/worst/parSim.svg" alt="CRAN checks"/></a>
+    <a href="https://github.com/SachaEpskamp/parSim/actions"><img src="https://github.com/SachaEpskamp/parSim/workflows/R-CMD-check/badge.svg" alt="R-CMD-check" /></a>
+</p>
 
-- Do not use too many conditions
-- Do not vary conditions that change too much
-  - For example, number of nodes in network studies change both sparsity, edge strength and dimension. Too much! Keep it fixed to one case
-- Try first using only 2 repititons, with nCores = 1
-- Use browser() for debugging (with nCores = 1)
-- Try local first before using a cluster
+## Description.
 
-## Example (see also examples folder)
+`parSim` is an `R` package that provides convenient functions to perform
+flexible simulations in parallel.
 
-```{r}
-# Install the package:
-# library("devtools")
-# install_github("sachaepskamp/parSim")
-library("parSim")
+## Installation
 
-# Some function we might use:
-bias <- function(x,y){abs(x-y)}
+- to install from CRAN run `install.packages("parSim")`
+- to install the latest version from GitHub run `remotes::install_github("SachaEpskamp/parSim")`
 
-# Run the simulation:
-Results <- parSim(
-  # Any number of conditions:
-  sampleSize = c(50, 100, 250),
-  beta = c(0, 0.5, 1),
-  sigma = c(0.25, 0.5, 1),
-  
-  # Number of repititions?
-  reps = 100,
-  
-  # Parallel?
-  nCores = 1,
-  
-  # Write to file?
-  write = FALSE,
-  
-  # Export objects (only needed when nCores > 1):
-  export = c("bias"),
-  
-  # R expression:
-  expression = {
-    # Load all R packages in the expression if needed
-    # library(...)
-    
-    # Want to debug? Enter browser() and run the function. Only works with nCores = 1!
-    # browser()
-    
-    # Enter whatever codes you want. I can use the conditions as objects.
-    X <- rnorm(sampleSize)
-    Y <- beta * X + rnorm(sampleSize, sigma)
-    fit <- lm(Y ~ X)
-    betaEst <- coef(fit)[2]
-    Rsquared <- summary(fit)$r.squared
-    
-    # Make a data frame with one row to return results (multple rows is also possible but not reccomended):
-    data.frame(
-      betaEst = betaEst,
-      bias = bias(beta,betaEst),
-      Rsquared = Rsquared
-    )
-  }
+## Example
+
+```r
+# Determine a function to evaluate for each simulation condition.
+bias <- function(x, y) {
+    # Perform some computation.
+    result <- abs(x - y)
+
+    # Return the result.
+    return(result)
+}
+
+# Run the simulation.
+results <- parSim(
+    # The simulation conditions.
+    sample_size = c(50, 100, 250),
+    beta = c(0, 0.5, 1),
+    sigma = c(0.25, 0.5, 1),
+
+    # The expression to evaluate for each simulation condition.
+    expression = {
+        # Generate the data.
+        x <- rnorm(sample_size)
+        y <- beta * x + rnorm(sample_size, sigma)
+
+        # Fit the model.
+        fit <- lm(y ~ x)
+
+        # Compute the relevant quantities.
+        beta_estimate <- coef(fit)[2]
+        r_squared <- summary(fit)$r.squared
+        bias <- bias(beta, beta_estimate)
+
+        # Return in a compatible format.
+        list(
+            beta_estimate = beta_estimate,
+            r_squared = r_squared,
+            bias = bias
+        )
+    },
+
+    # The number of replications.
+    replications = 100,
+
+    # The conditions to exclude.
+    exclude = sample_size == 50 | beta <= 0.5,
+
+    # The variables to export.
+    exports = c("bias"),
+
+    # No packages are required for export.
+    packages = NULL,
+
+    # Do not save the results.
+    save = FALSE,
+
+    # Execute the simulation on a single core.
+    cores = 1,
+
+    # Show the progress bar.
+    progress = TRUE
 )
 
-# Analyze the results:
-library("ggplot2")
-library("tidyr")
+# Print the head of the results.
+head(results)
 
-# We want to plot bias and R-squared. Let's first make it long format:
-Long <- gather(Results,metric,value,bias:Rsquared)
+# Configure the progress bar.
+configure_bar(
+    type = "modern",
+    format = "[:bar] [:percent] [:elapsed]",
+    show_after = 0.15
+)
 
-# Make factors with nice labels:
-Long$sigmaFac <- factor(Long$sigma,levels = c(0.25,0.5,1), labels = c("Sigma: 0.025", "Sigma: 0.5", "Sigma: 1"))
+# Run the simulation again with more cores and the updated progress bar.
+results <- parSim(
+    # The simulation conditions.
+    sample_size = c(50, 100, 250),
+    beta = c(0, 0.5, 1),
+    sigma = c(0.25, 0.5, 1),
 
-# Now let's plot:
-g <- ggplot(Long, aes(x = factor(sampleSize), y = value, fill = factor(beta)))  +
-  facet_grid(metric ~ sigmaFac, scales = "free") + 
-  geom_boxplot() + 
-  theme_bw() + 
-  xlab("Sample size") + 
-  ylab("") + 
-  scale_fill_discrete("Beta")
-print(g)
+    # The expression to evaluate for each simulation condition.
+    expression = {
+        # Generate the data.
+        x <- rnorm(sample_size)
+        y <- beta * x + rnorm(sample_size, sigma)
+
+        # Fit the model.
+        fit <- lm(y ~ x)
+
+        # Compute the relevant quantities.
+        beta_estimate <- coef(fit)[2]
+        r_squared <- summary(fit)$r.squared
+        bias <- bias(beta, beta_estimate)
+
+        # Return in a compatible format.
+        list(
+            beta_estimate = beta_estimate,
+            r_squared = r_squared,
+            bias = bias
+        )
+    },
+
+    # The number of replications.
+    replications = 1000,
+
+    # The conditions to exclude.
+    exclude = sample_size == 50 | beta <= 0.5,
+
+    # The variables to export.
+    exports = c("bias"),
+
+    # No packages are required for export.
+    packages = NULL,
+
+    # Save the results to a temporary file.
+    save = TRUE,
+
+    # Execute the simulation in parallel.
+    cores = 2,
+
+    # Show the progress bar.
+    progress = TRUE
+)
+
+# Print the tail of the results.
+tail(results)
 ```
