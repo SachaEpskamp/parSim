@@ -39,7 +39,6 @@ URL: https://github.com/SachaEpskamp/parSim
 BugReports: https://github.com/SachaEpskamp/parSim/issues
 Imports:
     dplyr,
-    rlang,
     parabar,
     utils
 Encoding: UTF-8
