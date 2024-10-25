@@ -9,7 +9,7 @@ parSim <- function(
     # The number replications for each condition.
     replications = 1,
 
-    # List of logical calls to exclude cases, written as formula.
+    # An unquoted logical expression to exclude cases.
     exclude = NULL,
 
     # A character vector of objects to be exported to the cluster.
@@ -45,9 +45,7 @@ parSim <- function(
     # If the user wants to exclude certain conditions.
     if (!is.null(exclude)) {
         # Dispose of the excluded conditions.
-        design <- design %>%
-            # By filtering them out.
-            dplyr::filter(!!!rlang::as_quosures(exclude))
+        design <- design[!eval(substitute(exclude), design), ]
     }
 
     # Get the total number of conditions.
