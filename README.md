@@ -8,8 +8,9 @@
 
 ## Description.
 
-`parSim` is an `R` package that provides convenient functions to perform
-flexible simulations in parallel.
+`parSim` is an `R` package that provides convenient functionality to perform
+flexible simulations in parallel using
+[`parabar`](https://parabar.mihaiconstantin.com) backends.
 
 ## Installation
 
