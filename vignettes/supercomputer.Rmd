@@ -1,10 +1,10 @@
 ---
 title: "Using `parSim` on a supercomputer"
-date: 'Oct 26th, 2024'
+date: 'October 26th, 2024'
 author: "Mihai Constantin and Sacha Epskamp"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{test}
+  %\VignetteIndexEntry{Using `parSim` on a supercomputer}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
