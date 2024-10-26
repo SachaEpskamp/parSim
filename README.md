@@ -26,6 +26,9 @@ flexible simulations in parallel using
 ## Example
 
 ```r
+# Load the package.
+library(parSim)
+
 # Determine a function to evaluate for each simulation condition.
 bias <- function(x, y) {
     # Perform some computation.
