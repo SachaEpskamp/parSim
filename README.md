@@ -91,14 +91,24 @@ results <- parSim(
 
 # Print the head of the results.
 head(results)
+```
 
+We can also use the `configure_bar` function (i.e., exported for from the
+[`parabar`](https://parabar.mihaiconstantin.com) package) to customize the
+progress bar.
+
+```r
 # Configure the progress bar.
 configure_bar(
     type = "modern",
     format = "[:bar] [:percent] [:elapsed]",
     show_after = 0.15
 )
+```
 
+Then, we can proceed with running the simulation as before.
+
+```r
 # Run the simulation again with more cores and the updated progress bar.
 results <- parSim(
     # The simulation conditions.
