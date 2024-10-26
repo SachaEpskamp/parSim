@@ -1,4 +1,10 @@
-<h1 align="center">parSim</h1>
+<p align="center">
+    <img width="180px" src="man/figures/parsim-logo.png" alt="parsim logo"/>
+</p>
+
+<h1 align="center">
+    Parallel Simulator
+</h1>
 
 <p align="center">
     <a href="https://www.r-pkg.org/pkg/parSim"><img src="https://www.r-pkg.org/badges/version/parSim" alt="CRAN version"/></a>
