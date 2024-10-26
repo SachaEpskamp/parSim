@@ -8,3 +8,5 @@
 *.Rcheck
 **/temp*.*
 inst/doc
+/doc/
+/Meta/
