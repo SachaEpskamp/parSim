@@ -142,7 +142,7 @@ results <- parSim(
     replications = 1000,
 
     # The conditions to exclude.
-    exclude = sample_size == 50 | beta <= 0.5,
+    exclude = sample_size == 50,
 
     # The variables to export.
     exports = c("bias"),
@@ -154,7 +154,7 @@ results <- parSim(
     save = TRUE,
 
     # Execute the simulation in parallel.
-    cores = 2,
+    cores = 4,
 
     # Show the progress bar.
     progress = TRUE
@@ -162,4 +162,37 @@ results <- parSim(
 
 # Print the tail of the results.
 tail(results)
+```
+
+Finally, we can also plot the results, for example, using the `ggplot2` package
+as follows.
+
+```r
+# Load relevant libraries.
+library(ggplot2)
+library(tidyr)
+
+# Pre-process the results in long format for plotting.
+results_long <- tidyr::gather(results, metric, value, beta_estimate:bias)
+
+# Make factors with nice labels for plotting.
+results_long$sigma_factor <- factor(
+    x = results_long$sigma,
+    levels = c(0.25, 0.5, 1),
+    labels = c("Sigma: 0.025", "Sigma: 0.5", "Sigma: 1")
+)
+
+# Plot.
+ggplot2::ggplot(
+    results_long, ggplot2::aes(
+        x = factor(sample_size), y = value, fill = factor(beta))
+    ) +
+    ggplot2::facet_grid(
+        metric ~ sigma_factor, scales = "free"
+    ) +
+    ggplot2::geom_boxplot() +
+    ggplot2::theme_bw() +
+    ggplot2::xlab("Sample size") +
+    ggplot2::ylab("") +
+    ggplot2::scale_fill_discrete("Beta")
 ```
