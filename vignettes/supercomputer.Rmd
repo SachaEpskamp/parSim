@@ -115,17 +115,17 @@ At a bare minimum, we need to:
   e.g., `replications = 1000`.
 - Export any external objects (i.e., via the `exports` argument) or `R` packages
   (i.e., via the `packages` argument) that are needed for the simulation script
-  to run. For the example above, we need to export the `bias` function, so we
-  would set `exports = c("bias")`, and no additional packages are needed.
+  to run. In the example above, we need to export the `bias` function, so we
+  would set `exports = c("bias")`, and no additional packages are required.
 - Decide on the number of `cores` to use for the simulation. The Lisa Compute
-  Cluster has 16 cores per node, so we could set `cores = 15`. Note that the
+  Cluster has `16` cores per node, so we could set `cores = 15`. Note that the
   parallel backend [`parabar`](https://parabar.mihaiconstantin.com) used by
-  `parSim` will use ensure at lease one core is available for the main process.
-- Finally, we need save the results of each `parSim` function execution to a
+  `parSim` will ensure that at lease one core is available for the main process.
+- Finally, we need to save the results of each `parSim` function execution to a
   file. Considering the intricacies of supercomputers, it is best to specify the
-  file name yourself. To do so, you can pass the file name as a string to the
-  `save` argument and ensure that the file name is unique for each `parSim`
-  function execution (e.g., by appending the job ID).
+  file name and path ourselves. To do so, we can pass the file name as a string
+  to the `save` argument and ensure that the file name is unique for each
+  `parSim` function execution (e.g., by appending the job or task ID).
 
 *Note.* Check out the documentation for `parSim` for more information on the
 function arguments (e.g., on how to exclude certain simulation conditions via
@@ -258,7 +258,7 @@ cp -r $TMP_DIR/output/. $SIM_DIR/output
 echo "Job $SLURM_ARRAY_JOB_ID ($SLURM_ARRAY_TASK_ID / $SLURM_ARRAY_TASK_COUNT) honored."
 ```
 
-*Note.* Make sure to adjust the job script to
+Please make sure to adjust the job script above to:
 
 - Load the correct version of `R`.
 - Set the correct paths for the `SIM_DIR` and `TMP_DIR` variables.
@@ -273,28 +273,28 @@ echo "Job $SLURM_ARRAY_JOB_ID ($SLURM_ARRAY_TASK_ID / $SLURM_ARRAY_TASK_COUNT) h
 ## Submitting the Job
 
 At this point, we are ready to submit the job to the supercomputer. To do so, we
-can dispatch an array job using the `sbatch` command. For instance, to submit
-the job script above `100` to the Lisa Compute Cluster, we could use the
-following command:
+can dispatch an array of jobs using the `sbatch` command. For instance, to
+submit the job script above `100` times to the Lisa Compute Cluster, we can use
+the following command:
 
 ```bash
 sbatch --array=1-100 job.sh
 ```
 
 This will result in replicating the `simulation.R` script `100` times, each time
-with a different job ID. The results of each replication will be saved in a
+with a different task ID. The results of each replication will be saved in a
 unique file in the `$SIM_DIR/output` directory. In total, each simulation
 condition will be replicated `1000 * 100 = 100000` times.
 
-Assuming username `mihaiconstantin`, you can monitor the job queue using the
+Assuming the username `mihaiconstantin`, we can monitor the job queue using the
 following command:
 
 ```bash
 squeue -u mihaiconstantin
 ```
 
-Finally, you can cancel a job (i.e., or task in an array job) using the
-`scancel` command as follows:
+Finally, we can cancel a job (i.e., or task in an job array) using the `scancel`
+command as follows:
 
 ```bash
 scancel job_id
@@ -305,11 +305,11 @@ If `job_id` is an array of tasks (i.e., `job_id_1`, `job_id_2`, etc.), then
 
 ## Folder Structure
 
-To run example simulation above on the Lisa Compute Cluster, your
-`~/simulation-example` directory should have the following structure:
+Following the example above, our `~/simulation-example` directory on the Lisa
+Compute Cluster should have the following structure:
 
 ```txt
-simulation-example/
+~/simulation-example/
 ├── job.sh
 ├── simulation.R
 └── output/
@@ -317,9 +317,9 @@ simulation-example/
 
 ## Downloading the Results
 
-Once the job is completed, you can download the results from the supercomputer
-to your local machine using the `scp` command. For instance, to download the
-results from the Lisa Compute Cluster, you could use the following command:
+Once the job is completed, we can download the results from the supercomputer to
+our local machine using the `scp` command. For instance, to download the results
+from the Lisa Compute Cluster, we can use the following command:
 
 ```bash
 # Navigate on your local machine to a directory of your choice.
@@ -337,7 +337,7 @@ paths accordingly.
 
 ## Processing the Results
 
-Finally, you can process the results on your local machine. Suppose you have a
+Finally, we can process the results on our local machine. Suppose we have a
 script called `analysis.R` that contains the following code:
 
 ```r
