@@ -1,5 +1,5 @@
 Package: parSim
-Title: Parallel Simulation Studies
+Title: Parallel Simulator
 Version: 0.1.4
 Authors@R:
     c(
