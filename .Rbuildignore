@@ -1,0 +1,11 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.vscode$
+^\.github$
+^man-roxygen$
+^vignettes/articles$
+^vignettes/.*\.Rmd\.orig$
+^doc$
+^Meta$
+^temp.*\..*$
+^examples$
