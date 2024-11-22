@@ -138,7 +138,7 @@ parSim <- function(
         on.exit({
             # Forcefully stop the backend.
             parabar::stop_backend(backend)
-        })
+        }, add = TRUE)
 
         # Prepare required cluster exports.
         variables <- c("design", "expr")
