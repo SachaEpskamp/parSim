@@ -1,85 +1,198 @@
-# Parallel Simulator Function for R
+<p align="center">
+    <img width="180px" src="man/figures/parsim-logo.png" alt="parsim logo"/>
+</p>
 
-## Tips for setting up a simulation study
+<h1 align="center">
+    Parallel Simulator
+</h1>
 
-- Do not use too many conditions
-- Do not vary conditions that change too much
-  - For example, number of nodes in network studies change both sparsity, edge strength and dimension. Too much! Keep it fixed to one case
-- Try first using only 2 repititons, with nCores = 1
-- Use browser() for debugging (with nCores = 1)
-- Try local first before using a cluster
+<p align="center">
+    <a href="https://www.r-pkg.org/pkg/parSim"><img src="https://www.r-pkg.org/badges/version/parSim" alt="CRAN version"/></a>
+    <a href="https://cran.r-project.org/web/checks/check_results_parSim.html"><img src="https://badges.cranchecks.info/worst/parSim.svg" alt="CRAN checks"/></a>
+    <a href="https://github.com/SachaEpskamp/parSim/actions"><img src="https://github.com/SachaEpskamp/parSim/workflows/R-CMD-check/badge.svg" alt="R-CMD-check" /></a>
+</p>
 
-## Example (see also examples folder)
+## Description.
 
-```{r}
-# Install the package:
-# library("devtools")
-# install_github("sachaepskamp/parSim")
-library("parSim")
+`parSim` is an `R` package that provides convenient functionality to perform
+flexible simulations in parallel using
+[`parabar`](https://parabar.mihaiconstantin.com) backends.
 
-# Some function we might use:
-bias <- function(x,y){abs(x-y)}
+## Installation
 
-# Run the simulation:
-Results <- parSim(
-  # Any number of conditions:
-  sampleSize = c(50, 100, 250),
-  beta = c(0, 0.5, 1),
-  sigma = c(0.25, 0.5, 1),
-  
-  # Number of repititions?
-  reps = 100,
-  
-  # Parallel?
-  nCores = 1,
-  
-  # Write to file?
-  write = FALSE,
-  
-  # Export objects (only needed when nCores > 1):
-  export = c("bias"),
-  
-  # R expression:
-  expression = {
-    # Load all R packages in the expression if needed
-    # library(...)
-    
-    # Want to debug? Enter browser() and run the function. Only works with nCores = 1!
-    # browser()
-    
-    # Enter whatever codes you want. I can use the conditions as objects.
-    X <- rnorm(sampleSize)
-    Y <- beta * X + rnorm(sampleSize, sigma)
-    fit <- lm(Y ~ X)
-    betaEst <- coef(fit)[2]
-    Rsquared <- summary(fit)$r.squared
-    
-    # Make a data frame with one row to return results (multple rows is also possible but not reccomended):
-    data.frame(
-      betaEst = betaEst,
-      bias = bias(beta,betaEst),
-      Rsquared = Rsquared
-    )
-  }
+- to install from CRAN run `install.packages("parSim")`
+- to install the latest version from GitHub run `remotes::install_github("SachaEpskamp/parSim")`
+
+## Example
+
+```r
+# Load the package.
+library(parSim)
+
+# Determine a function to evaluate for each simulation condition.
+bias <- function(x, y) {
+    # Perform some computation.
+    result <- abs(x - y)
+
+    # Return the result.
+    return(result)
+}
+
+# Run the simulation.
+results <- parSim(
+    # The simulation conditions.
+    sample_size = c(50, 100, 250),
+    beta = c(0, 0.5, 1),
+    sigma = c(0.25, 0.5, 1),
+
+    # The expression to evaluate for each simulation condition.
+    expression = {
+        # Generate the data.
+        x <- rnorm(sample_size)
+        y <- beta * x + rnorm(sample_size, sigma)
+
+        # Fit the model.
+        fit <- lm(y ~ x)
+
+        # Compute the relevant quantities.
+        beta_estimate <- coef(fit)[2]
+        r_squared <- summary(fit)$r.squared
+        bias <- bias(beta, beta_estimate)
+
+        # Return in a compatible format.
+        list(
+            beta_estimate = beta_estimate,
+            r_squared = r_squared,
+            bias = bias
+        )
+    },
+
+    # The number of replications.
+    replications = 100,
+
+    # The conditions to exclude.
+    exclude = sample_size == 50 | beta <= 0.5,
+
+    # The variables to export.
+    exports = c("bias"),
+
+    # No packages are required for export.
+    packages = NULL,
+
+    # Do not save the results.
+    save = FALSE,
+
+    # Execute the simulation on a single core.
+    cores = 1,
+
+    # Show the progress bar.
+    progress = TRUE
 )
 
-# Analyze the results:
-library("ggplot2")
-library("tidyr")
+# Print the head of the results.
+head(results)
+```
 
-# We want to plot bias and R-squared. Let's first make it long format:
-Long <- gather(Results,metric,value,bias:Rsquared)
+We can also use the `configure_bar` function (i.e., exported for from the
+[`parabar`](https://parabar.mihaiconstantin.com) package) to customize the
+progress bar.
 
-# Make factors with nice labels:
-Long$sigmaFac <- factor(Long$sigma,levels = c(0.25,0.5,1), labels = c("Sigma: 0.025", "Sigma: 0.5", "Sigma: 1"))
+```r
+# Configure the progress bar.
+configure_bar(
+    type = "modern",
+    format = "[:bar] [:percent] [:elapsed]",
+    show_after = 0.15
+)
+```
 
-# Now let's plot:
-g <- ggplot(Long, aes(x = factor(sampleSize), y = value, fill = factor(beta)))  +
-  facet_grid(metric ~ sigmaFac, scales = "free") + 
-  geom_boxplot() + 
-  theme_bw() + 
-  xlab("Sample size") + 
-  ylab("") + 
-  scale_fill_discrete("Beta")
-print(g)
+Then, we can proceed with running the simulation as before.
+
+```r
+# Run the simulation again with more cores and the updated progress bar.
+results <- parSim(
+    # The simulation conditions.
+    sample_size = c(50, 100, 250),
+    beta = c(0, 0.5, 1),
+    sigma = c(0.25, 0.5, 1),
+
+    # The expression to evaluate for each simulation condition.
+    expression = {
+        # Generate the data.
+        x <- rnorm(sample_size)
+        y <- beta * x + rnorm(sample_size, sigma)
+
+        # Fit the model.
+        fit <- lm(y ~ x)
+
+        # Compute the relevant quantities.
+        beta_estimate <- coef(fit)[2]
+        r_squared <- summary(fit)$r.squared
+        bias <- bias(beta, beta_estimate)
+
+        # Return in a compatible format.
+        list(
+            beta_estimate = beta_estimate,
+            r_squared = r_squared,
+            bias = bias
+        )
+    },
+
+    # The number of replications.
+    replications = 1000,
+
+    # The conditions to exclude.
+    exclude = sample_size == 50,
+
+    # The variables to export.
+    exports = c("bias"),
+
+    # No packages are required for export.
+    packages = NULL,
+
+    # Save the results to a temporary file.
+    save = TRUE,
+
+    # Execute the simulation in parallel.
+    cores = 4,
+
+    # Show the progress bar.
+    progress = TRUE
+)
+
+# Print the tail of the results.
+tail(results)
+```
+
+Finally, we can also plot the results, for example, using the `ggplot2` package
+as follows.
+
+```r
+# Load relevant libraries.
+library(ggplot2)
+library(tidyr)
+
+# Pre-process the results in long format for plotting.
+results_long <- tidyr::gather(results, metric, value, beta_estimate:bias)
+
+# Make factors with nice labels for plotting.
+results_long$sigma_factor <- factor(
+    x = results_long$sigma,
+    levels = c(0.25, 0.5, 1),
+    labels = c("Sigma: 0.025", "Sigma: 0.5", "Sigma: 1")
+)
+
+# Plot.
+ggplot2::ggplot(
+    results_long, ggplot2::aes(
+        x = factor(sample_size), y = value, fill = factor(beta))
+    ) +
+    ggplot2::facet_grid(
+        metric ~ sigma_factor, scales = "free"
+    ) +
+    ggplot2::geom_boxplot() +
+    ggplot2::theme_bw() +
+    ggplot2::xlab("Sample size") +
+    ggplot2::ylab("") +
+    ggplot2::scale_fill_discrete("Beta")
 ```
