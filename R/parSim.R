@@ -20,6 +20,10 @@ parSim <- function(
 
     # Whether to write the results to a file and where.
     save = FALSE,
+    
+    # Backward competability (deprecated):
+    write, # if TRUE, results are written instead returned as data frame
+    name,
 
     # Number of cores for parallel execution.
     cores = 1,
@@ -27,6 +31,18 @@ parSim <- function(
     # Whether to show a progress bar.
     progress = TRUE
 ) {
+  
+  # Check old arguments:
+  if (!missing(write) || !missing(name)){
+    warning("'write' and 'name' arguments are deprecated, use 'save' instead. Overwriting save argument now!", call. = FALSE)
+    
+    if (missing(name)){
+      save <- write
+    } else {
+      save <- name
+    }
+  }
+  
     # Expand all conditions into a simulation design.
     design <- do.call(
         what = expand.grid,

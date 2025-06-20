@@ -13,6 +13,8 @@ parSim(
     exports = NULL,
     packages = NULL,
     save = FALSE,
+    write,
+    name,
     cores = 1,
     progress = TRUE
 )
@@ -95,6 +97,12 @@ parSim(
         A logical value indicating whether to show a progress bar while running
         the simulation. Defaults to \code{TRUE}.
     }
+      \item{write}{
+DEPRECATED: Logical, should the results be written to a file instead of returned as a dataframe?
+}
+  \item{name}{
+DEPRECATED: Name of the file if \code{write = TRUE}
+}
 }
 
 \value{
