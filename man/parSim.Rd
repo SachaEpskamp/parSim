@@ -9,6 +9,7 @@ parSim(
     ...,
     expression,
     replications = 1,
+    reps,
     exclude = NULL,
     exports = NULL,
     packages = NULL,
@@ -45,6 +46,10 @@ parSim(
         An integer representing the number of times each condition will be
         replicated. Please ensure that an adequate number of simulations is used
         (i.e., the more the better). Defaults to \code{1}.
+    }
+    
+       \item{reps}{
+        Deprecated alternative to 'replications'
     }
 
     \item{exclude}{
