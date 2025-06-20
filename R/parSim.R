@@ -8,6 +8,9 @@ parSim <- function(
 
     # The number replications for each condition.
     replications = 1,
+    
+    # Deprecated:
+    reps,
 
     # An unquoted logical expression to exclude cases.
     exclude = NULL,
@@ -33,6 +36,11 @@ parSim <- function(
 ) {
   
   # Check old arguments:
+  if (!missing(reps)){
+    warning("'reps' argument is deprecated, use 'replications' instead.", call. = FALSE)
+    replications <- reps
+  }
+  
   if (!missing(write) || !missing(name)){
     warning("'write' and 'name' arguments are deprecated, use 'save' instead. Overwriting save argument now!", call. = FALSE)
     
