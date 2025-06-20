@@ -1,0 +1,385 @@
+---
+title: "Using `parSim` on a supercomputer"
+date: 'October 26th, 2024'
+author: "Mihai Constantin and Sacha Epskamp"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using `parSim` on a supercomputer}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+In this short vignette we illustrate the main steps for using the `parSim`
+package to execute a simulation on a supercomputer. We use as example the job
+scheduler employed by the Dutch [Lisa Computing
+Cluster](https://www.surf.nl/en/lisa-computing-cluster-extra-computing-power-for-research),
+however the steps are similar for other supercomputers.
+
+## Writing the Simulation Script
+
+The first step is to write a simulation script compatible with the `parSim`
+package. Suppose we have have the following simulation conditions:
+
+```r
+# Sample size.
+sample_size = c(50, 100, 250)
+
+# Beta values.
+beta = c(0, 0.5, 1)
+
+# Sigma values.
+sigma = c(0.25, 0.5, 1)
+```
+
+Then, our simulation script could look like the following, where we are
+interested in computing the bias:
+
+```r
+# The function to evaluate for each simulation condition.
+bias <- function(x, y) {
+    # Perform some computation.
+    result <- abs(x - y)
+
+    # Return the result.
+    return(result)
+}
+
+# The simulation expression to evaluate for each simulation condition.
+{
+    # Generate the data.
+    x <- rnorm(sample_size)
+    y <- beta * x + rnorm(sample_size, sigma)
+
+    # Fit the model.
+    fit <- lm(y ~ x)
+
+    # Compute the relevant quantities.
+    beta_estimate <- coef(fit)[2]
+    r_squared <- summary(fit)$r.squared
+    bias <- bias(beta, beta_estimate)
+
+    # Return in a compatible format.
+    list(
+        beta_estimate = beta_estimate,
+        r_squared = r_squared,
+        bias = bias
+    )
+}
+```
+
+If we put these pieces of code together, then our `parSim` simulation function
+looks like the following:
+
+```r
+# Run the simulation.
+results <- parSim(
+    # The simulation conditions.
+    sample_size = c(50, 100, 250),
+    beta = c(0, 0.5, 1),
+    sigma = c(0.25, 0.5, 1),
+
+    # The expression to evaluate for each simulation condition.
+    expression = {
+        # Generate the data.
+        x <- rnorm(sample_size)
+        y <- beta * x + rnorm(sample_size, sigma)
+
+        # Fit the model.
+        fit <- lm(y ~ x)
+
+        # Compute the relevant quantities.
+        beta_estimate <- coef(fit)[2]
+        r_squared <- summary(fit)$r.squared
+        bias <- bias(beta, beta_estimate)
+
+        # Return in a compatible format.
+        list(
+            beta_estimate = beta_estimate,
+            r_squared = r_squared,
+            bias = bias
+        )
+    },
+
+    # The variables to export.
+    exports = c("bias")
+)
+```
+
+There are a few adjustments to make to the `parSim` function call above before
+we are ready to place it in an `R` script file and deploy it on a supercomputer.
+At a bare minimum, we need to:
+
+- Decide on the number of `replications` to run for each simulation condition,
+  e.g., `replications = 1000`.
+- Export any external objects (i.e., via the `exports` argument) or `R` packages
+  (i.e., via the `packages` argument) that are needed for the simulation script
+  to run. In the example above, we need to export the `bias` function, so we
+  would set `exports = c("bias")`, and no additional packages are required.
+- Decide on the number of `cores` to use for the simulation. The Lisa Compute
+  Cluster has `16` cores per node, so we could set `cores = 15`. Note that the
+  parallel backend [`parabar`](https://parabar.mihaiconstantin.com) used by
+  `parSim` will ensure that at lease one core is available for the main process.
+- Finally, we need to save the results of each `parSim` function execution to a
+  file. Considering the intricacies of supercomputers, it is best to specify the
+  file name and path ourselves. To do so, we can pass the file name as a string
+  to the `save` argument and ensure that the file name is unique for each
+  `parSim` function execution (e.g., by appending the job or task ID).
+
+*Note.* Check out the documentation for `parSim` for more information on the
+function arguments (e.g., on how to exclude certain simulation conditions via
+the `exclude` argument).
+
+With the considerations above in mind, we can now write our `simulation.R` file
+as follows:
+
+```r
+#!/usr/bin/env Rscript
+
+# Clear the environment to ensure a fresh start.
+rm(list = ls(all.names = TRUE))
+
+# Get the temporary directory from the environment.
+TMP_DIR <- Sys.getenv("TMP_DIR")
+
+# Create the output path.
+out_dir <- paste0(TMP_DIR, "/output")
+
+# Load the current job ID in the batch array.
+job_id <- Sys.getenv("SLURM_ARRAY_TASK_ID")
+
+# Prepare a unique file name for the results.
+file_name <- paste0(out_dir, "/simulation_results_id_", job_id)
+
+# Load libraries.
+library(parSim)
+library(flexiblas)
+
+# For `R` complied with the `foss` (i.e., `flexiblas`) toolchain, we set the
+# number of threads to one.
+flexiblas::flexiblas_set_num_threads(1)
+
+# Run the simulation.
+results <- parSim(
+    # The simulation conditions.
+    sample_size = c(50, 100, 250),
+    beta = c(0, 0.5, 1),
+    sigma = c(0.25, 0.5, 1),
+
+    # The expression to evaluate for each simulation condition.
+    expression = {
+        # Generate the data.
+        x <- rnorm(sample_size)
+        y <- beta * x + rnorm(sample_size, sigma)
+
+        # Fit the model.
+        fit <- lm(y ~ x)
+
+        # Compute the relevant quantities.
+        beta_estimate <- coef(fit)[2]
+        r_squared <- summary(fit)$r.squared
+        bias <- bias(beta, beta_estimate)
+
+        # Return in a compatible format.
+        list(
+            beta_estimate = beta_estimate,
+            r_squared = r_squared,
+            bias = bias
+        )
+    },
+
+    # The variables to export.
+    exports = c("bias"),
+
+    # The number of replications.
+    replications = 1000,
+
+    # The variables to export.
+    exports = c("bias"),
+
+    # Save the results.
+    save = file_name,
+
+    # Execute the simulation on a single core.
+    cores = 16
+)
+```
+
+It is always a good idea to test the `simulation.R` script locally before
+deploying it on a supercomputer (i.e., debugging could be much easier on your
+local machine).
+
+## Preparing the Job Script
+
+The next step consist in preparing the job script that will be used to submit
+the `simulation.R` script to the supercomputer. The job script is a shell script
+that specifies the resources needed for the job. For more information on the
+specifics of the job script, please refer to the documentation of the
+supercomputer you are using.
+
+Let's assume we are using the Lisa Compute Cluster and our `simulation.R` script
+is located in the `~/simulation-example` directory on the `login` node. Then,
+our job script could look like the following:
+
+```bash
+#!/bin/bash
+#SBATCH -N 1
+#SBATCH -p normal
+#SBATCH -t 01:00:00
+
+# Load modules.
+module load 2021
+module load R/4.1.0-foss-2021a
+
+# Set the user.
+export USERNAME=mihaiconstantin
+
+# Define the simulation path on the login node.
+export SIM_DIR=$HOME/simulation-example
+
+# Export packages on the login node.
+export R_LIBS=$HOME/R/x86_64-pc-linux-gnu-library/4.1
+
+# Define temporary directory.
+export TMP_DIR=$TMPDIR/$USERNAME
+
+# Make output directory.
+mkdir -p $TMP_DIR/output
+
+# Run the script (i.e., using 15 cores).
+# Note. The script sets the number of threads to 1.
+Rscript $SIM_DIR/simulation.R
+
+# Copy output from scratch.
+cp -r $TMP_DIR/output/. $SIM_DIR/output
+
+# Exit message.
+echo "Job $SLURM_ARRAY_JOB_ID ($SLURM_ARRAY_TASK_ID / $SLURM_ARRAY_TASK_COUNT) honored."
+```
+
+Please make sure to adjust the job script above to:
+
+- Load the correct version of `R`.
+- Set the correct paths for the `SIM_DIR` and `TMP_DIR` variables.
+- Replace `mihaiconstantin` with your username for the `USERNAME` variable.
+- Adjust the `#SBATCH` directives to match the resources needed for your job.
+  This part is crucial if you want to avoid having your job killed by the
+  scheduler. For instance, the `#SBATCH -t 01:00:00` directive refers to the
+  *wall time* and specifies that the job will run for one hour. This value
+  should be adjusted according to the expected execution duration of the
+  `parSim` function specified in the `simulation.R` script.
+
+## Submitting the Job
+
+At this point, we are ready to submit the job to the supercomputer. To do so, we
+can dispatch an array of jobs using the `sbatch` command. For instance, to
+submit the job script above `100` times to the Lisa Compute Cluster, we can use
+the following command:
+
+```bash
+sbatch --array=1-100 job.sh
+```
+
+This will result in replicating the `simulation.R` script `100` times, each time
+with a different task ID. The results of each replication will be saved in a
+unique file in the `$SIM_DIR/output` directory. In total, each simulation
+condition will be replicated `1000 * 100 = 100000` times.
+
+Assuming the username `mihaiconstantin`, we can monitor the job queue using the
+following command:
+
+```bash
+squeue -u mihaiconstantin
+```
+
+Finally, we can cancel a job (i.e., or task in an job array) using the `scancel`
+command as follows:
+
+```bash
+scancel job_id
+```
+
+If `job_id` is an array of tasks (i.e., `job_id_1`, `job_id_2`, etc.), then
+`scancel job_id` will cancel all tasks.
+
+## Folder Structure
+
+Following the example above, our `~/simulation-example` directory on the Lisa
+Compute Cluster should have the following structure:
+
+```txt
+~/simulation-example/
+├── job.sh
+├── simulation.R
+└── output/
+```
+
+## Downloading the Results
+
+Once the job is completed, we can download the results from the supercomputer to
+our local machine using the `scp` command. For instance, to download the results
+from the Lisa Compute Cluster, we can use the following command:
+
+```bash
+# Navigate on your local machine to a directory of your choice.
+cd ~/Downloads/simulation-results/
+
+# Make a directory where to download the results from the supercomputer.
+mkdir output
+
+# Download the results.
+scp mihaiconstantin@lisa.surfsara.nl:~/simulation-example/output/simulation_results* ./output/
+```
+
+*Note.* Make sure to replace `mihaiconstantin` with your username and adjust the
+paths accordingly.
+
+## Processing the Results
+
+Finally, we can process the results on our local machine. Suppose we have a
+script called `analysis.R` that contains the following code:
+
+```r
+# Load relevant libraries.
+library(ggplot2)
+library(tidyr)
+
+# Set the working directory.
+setwd("~/Downloads/simulation-results/")
+
+# All simulation result files.
+files <- list.files("output/", pattern = "simulation_results_", full.names = TRUE)
+
+# Read all files and bind them together.
+results <- do.call(
+    rbind, lapply(files, read.table, header = TRUE)
+)
+
+# Pre-process the results in long format for plotting.
+results_long <- tidyr::gather(results, metric, value, beta_estimate:bias)
+
+# Make factors with nice labels for plotting.
+results_long$sigma_factor <- factor(
+    x = results_long$sigma,
+    levels = c(0.25, 0.5, 1),
+    labels = c("Sigma: 0.025", "Sigma: 0.5", "Sigma: 1")
+)
+
+# Plot.
+ggplot2::ggplot(
+    results_long, ggplot2::aes(
+        x = factor(sample_size), y = value, fill = factor(beta))
+    ) +
+    ggplot2::facet_grid(
+        metric ~ sigma_factor, scales = "free"
+    ) +
+    ggplot2::geom_boxplot() +
+    ggplot2::theme_bw() +
+    ggplot2::xlab("Sample size") +
+    ggplot2::ylab("") +
+    ggplot2::scale_fill_discrete("Beta")
+```
+
+We hope this helps you get started with running simulations on a supercomputer
+using the `parSim` package. Good luck with your simulations!

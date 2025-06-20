@@ -1,135 +1,258 @@
+% Documentation for the `parSim::parSim` function.
+
 \name{parSim}
 \alias{parSim}
-\alias{parSim_dt}
-\alias{parSim-package}
-%- Also NEED an '\alias' for EACH other topic documented here.
-\title{
-Parallel Simulator
-}
-\description{
-Takes a set of conditions and an R expression and returns a data frame with simulation results. parSim is based on dplyr functions, and if you want to use the data.table package to make your simulation a bit faster, use  parSim_dt. See details.
-}
+\title{Parallel Simulator}
+
 \usage{
-parSim(..., expression, reps = 1, write = FALSE, name, 
-       nCores = 1, export, exclude, debug = FALSE, 
-       progressbar = TRUE)
-                   
-parSim_dt(..., expression, reps = 1, write = FALSE, name, 
-          nCores = 1, export, exclude, debug = FALSE, 
-          progressbar = TRUE)     
+parSim(
+    ...,
+    expression,
+    replications = 1,
+    exclude = NULL,
+    exports = NULL,
+    packages = NULL,
+    save = FALSE,
+    cores = 1,
+    progress = TRUE
+)
 }
-%- maybe also 'usage' for other objects documented here.
+
 \arguments{
-  \item{\dots}{
-Vectors indicating any number of conditions. For example, if you want to vary sample size between N = 100, 250, and 1000, and a regression slope between beta = 0, 0.5, and 1, you can assign as first two arguments \code{sampleSize = c(100, 250, 1000), beta = c(0, 0.5, 1)}. 
+    \item{...}{
+        Any number of \code{R} vectors representing the simulation conditions.
+        For example, if you want to vary the sample size between \verb{\{100,
+        250, 1000\}} and a regression slope between \verb{\{0, 0.5, 1\}}, you
+        can assign the first two arguments as \code{sample_size = c(100, 250,
+        1000)} and \code{beta = c(0, 0.5, 1)}.
+    }
+
+    \item{expression}{
+        An \code{R} expression that uses the simulation conditions as variable
+        names. For example, if the \code{...} arguments are used to define
+        \code{sample_size = c(100, 250, 1000)}, then, within the context of
+        \code{expression}, you can access the \code{sample_size} variable, which
+        may hold a value of \code{100}, \code{250}, or \code{1000} depending on
+        the simulation condition. The expression must collect and output the
+        results as a named \code{\link[base:list]{base::list}} or a
+        \code{\link[base:data.frame]{base::data.frame}}. See the the
+        \emph{Examples} section for more details.
+    }
+
+    \item{replications}{
+        An integer representing the number of times each condition will be
+        replicated. Please ensure that an adequate number of simulations is used
+        (i.e., the more the better). Defaults to \code{1}.
+    }
+
+    \item{exclude}{
+        A list of logical calls indicating the simulation conditions to exclude
+        cases, written as formula. For example, \code{exclude = sample_size ==
+        100 | beta == 0} will exclude all cases where \code{sample_size} is
+        equal to \code{100} or \code{beta} is equal to \code{0}. Similarly,
+        \code{exclude = sample_size == 100 & beta == 0} will exclude all cases
+        where \code{sample_size} is equal to \code{100} and \code{beta} is equal
+        to \code{0}. Defaults to \code{NULL} (i.e., no simulation conditions are
+        excluded).
+    }
+
+    \item{exports}{
+        A character string containing the names of the objects to be exported to
+        the parallel backend. This argument is only relevant when using parallel
+        execution (i.e., \code{cores > 1}). Defaults to \code{NULL} (i.e.,
+        indicating that no objects are to be exported).
+    }
+
+    \item{packages}{
+        A character vector containing the names of the packages to be loaded on
+        the parallel backend. For example \code{packages = c("bootnet",
+        "qgraph")}. This argument is only relevant when using parallel execution
+        (i.e., \code{cores > 1}). Defaults to \code{NULL} (i.e., indicating that
+        no packages are to be loaded).
+    }
+
+    \item{save}{
+        A logical or string value controlling whether and where to save the
+        results to a text file. If \code{save = TRUE} the results are saved to a
+        temporary file (i.e., created using
+        \code{\link[base:tempfile]{base::tempfile}}). If \code{save} is a
+        string, the results are saved to the specified file. If \code{save =
+        FALSE} the results are not saved. Upon saving the results, a message is
+        printed to the console indicating the location of the saved file.
+        Defaults to \code{FALSE}.
+    }
+
+    \item{cores}{
+        An integer value indicating the number of cores to use for parallel
+        execution. Setting this argument to \code{1} implies that the simulation
+        conditions are run sequentially. Using a value greater than \code{1}
+        implies that the simulation conditions are run in parallel using a
+        \code{\link[parabar:parabar-package]{parabar::parabar}} backend with the
+        specified number of cores. Defaults to \code{1}.
+    }
+
+    \item{progress}{
+        A logical value indicating whether to show a progress bar while running
+        the simulation. Defaults to \code{TRUE}.
+    }
 }
-  \item{expression}{
-An R expression that uses the conditions as object names. For example, if the conditions \code{sampleSize = c(100, 250, 1000)} is used, then in the R expression you can use the object \code{sampleSize}, which may be 100, 250 or 1000 depending on the simulation condition.
-}
-  \item{reps}{
-Number of times each condition has to be replicated.
-}
-  \item{write}{
-Logical, should the results be written to a file instead of returned as a dataframe?
-}
-  \item{name}{
-Name of the file if \code{write = TRUE}
-}
-  \item{nCores}{
-Number of cores to use. NOTE: Only setting \code{nCores} to 1 allows you to see a progress bar and to use \code{browser()} in the R expression for debugging.
-}
-  \item{export}{
-A character string of objects to be exported. Only needed if \code{nCores} > 1.
-}
-  \item{exclude}{
-A list with logical calls to exclude cases. Written as formula.
-}
-  \item{debug}{
-Allows for some debugging controls and output. Not recommended. 
-}
-\item{progressbar}{Logical: should a progress bar be shown. Setting this to \code{FALSE} will make simulations much faster!}
-}
-\details{
-The R expression should use object names assigned as conditions, and should return a list with single values, or a data frame / data table. If you want to output more than one row of results per condition, you may return a data frame / data table with multiple rows. When using multiple cores, note that all packages should be loaded in the R expression, all objects needed should be exported using the export object, and you will not see a progress bar. 
-}
+
 \value{
-\code{parSim} outputs a data frame with the results of every iteration as a row. 
-
-\code{parSim_dt} outputs a data table with the results of every iteration as a row.
+    The \code{\link{parSim}} function returns a
+    \code{\link[base:data.frame]{base::data.frame}} with the results of every
+    iteration as a row.
 }
 
-\author{
-Sacha Epskamp <mail@sachaepskamp.com>
+\description{
+    The function \code{\link{parSim}} takes a set of conditions and an \code{R}
+    \code{\link[base:expression]{base::expression}} and returns a
+    \code{\link[base:data.frame]{base::data.frame}} with simulation results. The
+    \code{\link{parSim}} function is based on
+    \code{\link[dplyr:dplyr-package]{dplyr::dplyr}} functions for handling the
+    results, and the \code{\link[parabar:parabar-package]{parabar::parabar}}
+    package for handling parallelization and progress tracking.
+}
 
-Xinkai Du <xinkai.du.xd@gmail.com>
+\details{
+    The \code{R} \code{\link[base:expression]{base::expression}} should use
+    object names assigned as conditions, and should return a named list with
+    single values, or a \code{\link[base:data.frame]{base::data.frame}}. If you
+    want to output more than one row of results per condition, you may return a
+    \code{\link[base:data.frame]{base::data.frame}} with multiple rows. When
+    running the simulation conditions in parallel, note that all packages needed
+    should be loaded via the \code{packages} argument and all external objects
+    used within the \code{expression} should be exported via the \code{export}
+    argument.
 }
 
 \examples{
-# Some function we might use:
-bias <- function(x,y){abs(x-y)}
+# Determine a function to evaluate for each simulation condition.
+bias <- function(x, y) {
+    # Perform some computation.
+    result <- abs(x - y)
 
-# Run the simulation:
-Results <- parSim(
-  # Any number of conditions:
-  sampleSize = c(50, 100, 250),
-  beta = c(0, 0.5, 1),
-  sigma = c(0.25, 0.5, 1),
-  
-  # Number of repititions?
-  reps = 25, # more is better!
-  
-  # Parallel?
-  nCores = 1,
-  
-  # Write to file?
-  write = FALSE,
-  
-  # Export objects (only needed when nCores > 1):
-  export = c("bias"),
-  
-  # R expression:
-  expression = {
-    # Load all R packages in the expression if needed
-    # library(...)
-    
-    # Want to debug? Enter browser() and run the function. Only works with nCores = 1!
-    # browser()
-    
-    # Enter whatever codes you want. I can use the conditions as objects.
-    X <- rnorm(sampleSize)
-    Y <- beta * X + rnorm(sampleSize, sigma)
-    fit <- lm(Y ~ X)
-    betaEst <- coef(fit)[2]
-    Rsquared <- summary(fit)$r.squared
-    
-    # Make a data frame with one row to return results (multple rows is 
-    # also possible but not recommended):
-    data.frame(
-      betaEst = betaEst,
-      bias = bias(beta,betaEst),
-      Rsquared = Rsquared
-    )
-  }
+    # Return the result.
+    return(result)
+}
+
+# Run the simulation.
+results <- parSim(
+    # The simulation conditions.
+    sample_size = c(50, 100, 250),
+    beta = c(0, 0.5, 1),
+    sigma = c(0.25, 0.5, 1),
+
+    # The expression to evaluate for each simulation condition.
+    expression = {
+        # Generate the data.
+        x <- rnorm(sample_size)
+        y <- beta * x + rnorm(sample_size, sigma)
+
+        # Fit the model.
+        fit <- lm(y ~ x)
+
+        # Compute the relevant quantities.
+        beta_estimate <- coef(fit)[2]
+        r_squared <- summary(fit)$r.squared
+        bias <- bias(beta, beta_estimate)
+
+        # Return in a compatible format.
+        list(
+            beta_estimate = beta_estimate,
+            r_squared = r_squared,
+            bias = bias
+        )
+    },
+
+    # The number of replications.
+    replications = 100,
+
+    # The conditions to exclude.
+    exclude = sample_size == 50 | beta <= 0.5,
+
+    # The variables to export.
+    exports = c("bias"),
+
+    # No packages are required for export.
+    packages = NULL,
+
+    # Do not save the results.
+    save = FALSE,
+
+    # Execute the simulation on a single core.
+    cores = 1,
+
+    # Show the progress bar.
+    progress = TRUE
 )
 
-# Analyze the results:
-library("ggplot2")
-library("tidyr")
+# Print the head of the results.
+head(results)
 
-# We want to plot bias and R-squared. Let's first make it long format:
-Long <- gather(Results,metric,value,bias:Rsquared)
+# Configure the progress bar.
+configure_bar(
+    type = "modern",
+    format = "[:bar] [:percent] [:elapsed]",
+    show_after = 0.15
+)
 
-# Make factors with nice labels:
-Long$sigmaFac <- factor(Long$sigma,levels = c(0.25,0.5,1), 
-    labels = c("Sigma: 0.025", "Sigma: 0.5", "Sigma: 1"))
+# Run the simulation again with more cores and the updated progress bar.
+results <- parSim(
+    # The simulation conditions.
+    sample_size = c(50, 100, 250),
+    beta = c(0, 0.5, 1),
+    sigma = c(0.25, 0.5, 1),
 
-# Now let's plot:
-g <- ggplot(Long, aes(x = factor(sampleSize), y = value, fill = factor(beta)))  +
-  facet_grid(metric ~ sigmaFac, scales = "free") + 
-  geom_boxplot() + 
-  theme_bw() + 
-  xlab("Sample size") + 
-  ylab("") + 
-  scale_fill_discrete("Beta")
-print(g)
+    # The expression to evaluate for each simulation condition.
+    expression = {
+        # Generate the data.
+        x <- rnorm(sample_size)
+        y <- beta * x + rnorm(sample_size, sigma)
+
+        # Fit the model.
+        fit <- lm(y ~ x)
+
+        # Compute the relevant quantities.
+        beta_estimate <- coef(fit)[2]
+        r_squared <- summary(fit)$r.squared
+        bias <- bias(beta, beta_estimate)
+
+        # Return in a compatible format.
+        list(
+            beta_estimate = beta_estimate,
+            r_squared = r_squared,
+            bias = bias
+        )
+    },
+
+    # The number of replications.
+    replications = 1000,
+
+    # The conditions to exclude.
+    exclude = sample_size == 50 | beta <= 0.5,
+
+    # The variables to export.
+    exports = c("bias"),
+
+    # No packages are required for export.
+    packages = NULL,
+
+    # Save the results to a temporary file.
+    save = TRUE,
+
+    # Execute the simulation in parallel.
+    cores = 2,
+
+    # Show the progress bar.
+    progress = TRUE
+)
+
+# Print the tail of the results.
+tail(results)
+}
+
+\seealso{
+    \code{\link[bootnet:bootnet]{bootnet::bootnet}},
+    \link[parabar:par_lapply]{parabar::par_lapply}, and
+    \link[parabar:configure_bar]{parabar::configure_bar}.
 }
