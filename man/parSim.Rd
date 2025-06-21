@@ -11,7 +11,7 @@ parSim(
     replications = 1,
     reps,
     exclude = NULL,
-    exports = NULL,
+    export = NULL,
     packages = NULL,
     save = FALSE,
     write,
@@ -63,7 +63,7 @@ parSim(
         excluded).
     }
 
-    \item{exports}{
+    \item{export}{
         A character string containing the names of the objects to be exported to
         the parallel backend. This argument is only relevant when using parallel
         execution (i.e., \code{cores > 1}). Defaults to \code{NULL} (i.e.,

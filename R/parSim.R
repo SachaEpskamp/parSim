@@ -16,7 +16,7 @@ parSim <- function(
     exclude = NULL,
 
     # A character vector of objects to be exported to the cluster.
-    exports = NULL,
+    export = NULL,
 
     # A character vector of packages to be loaded on the cluster.
     packages = NULL,
