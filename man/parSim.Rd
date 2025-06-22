@@ -184,7 +184,7 @@ results <- parSim(
     exclude = sample_size == 50 | beta <= 0.5,
 
     # The variables to export.
-    exports = c("bias"),
+    export = c("bias"),
 
     # No packages are required for export.
     packages = NULL,
@@ -245,7 +245,7 @@ results <- parSim(
     exclude = sample_size == 50 | beta <= 0.5,
 
     # The variables to export.
-    exports = c("bias"),
+    export = c("bias"),
 
     # No packages are required for export.
     packages = NULL,
