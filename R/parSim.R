@@ -50,7 +50,7 @@ parSim <- function(
     if (missing(name)){
       save <- write
     } else {
-      save <- name
+      save <- paste0(name,".txt")
     }
   }
   
