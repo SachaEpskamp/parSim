@@ -30,6 +30,9 @@ parSim <- function(
 
     # Number of cores for parallel execution.
     cores = 1,
+    
+    # Backward competability:
+    nCores,
 
     # Whether to show a progress bar.
     progress = TRUE
@@ -50,6 +53,13 @@ parSim <- function(
       save <- name
     }
   }
+  
+  if (!missing(nCores)){
+    warning("'nCores' argument is deprecated, use 'cores' instead.", call. = FALSE)
+    cores <- nCores
+  }
+  
+  
   
     # Expand all conditions into a simulation design.
     design <- do.call(
@@ -168,7 +178,7 @@ parSim <- function(
         variables <- c("design", "expr")
 
         # Add any additional user exports.
-        variables <- c(variables, exports, "packages")
+        variables <- c(variables, export, "packages")
 
         # Export objects to the cluster.
         parabar::export(
