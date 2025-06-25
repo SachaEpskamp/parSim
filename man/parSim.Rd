@@ -17,6 +17,7 @@ parSim(
     write,
     name,
     cores = 1,
+    nCores,
     progress = TRUE
 )
 }
@@ -97,6 +98,11 @@ parSim(
         \code{\link[parabar:parabar-package]{parabar::parabar}} backend with the
         specified number of cores. Defaults to \code{1}.
     }
+    
+        \item{nCores}{
+       Deprecated alternative to 'cores'
+    }
+
 
     \item{progress}{
         A logical value indicating whether to show a progress bar while running
