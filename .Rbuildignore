@@ -9,3 +9,4 @@
 ^Meta$
 ^temp.*\..*$
 ^examples$
+^\.claude$

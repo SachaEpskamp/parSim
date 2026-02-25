@@ -80,10 +80,10 @@ results <- parSim(
     packages = NULL,
 
     # Do not save the results.
-    save = FALSE,
+    write = FALSE,
 
     # Execute the simulation on a single core.
-    cores = 1,
+    nCores = 1,
 
     # Show the progress bar.
     progress = TRUE
@@ -93,7 +93,7 @@ results <- parSim(
 head(results)
 ```
 
-We can also use the `configure_bar` function (i.e., exported for from the
+We can also use the `configure_bar` function (i.e., exported from the
 [`parabar`](https://parabar.mihaiconstantin.com) package) to customize the
 progress bar.
 
@@ -151,10 +151,10 @@ results <- parSim(
     packages = NULL,
 
     # Save the results to a temporary file.
-    save = TRUE,
+    write = TRUE,
 
     # Execute the simulation in parallel.
-    cores = 4,
+    nCores = 4,
 
     # Show the progress bar.
     progress = TRUE
@@ -179,7 +179,7 @@ results_long <- tidyr::gather(results, metric, value, beta_estimate:bias)
 results_long$sigma_factor <- factor(
     x = results_long$sigma,
     levels = c(0.25, 0.5, 1),
-    labels = c("Sigma: 0.025", "Sigma: 0.5", "Sigma: 1")
+    labels = c("Sigma: 0.25", "Sigma: 0.5", "Sigma: 1")
 )
 
 # Plot.

@@ -8,7 +8,7 @@ parSim <- function(
 
     # The number replications for each condition.
     replications = 1,
-    
+
     # Deprecated:
     reps,
 
@@ -21,52 +21,63 @@ parSim <- function(
     # A character vector of packages to be loaded on the cluster.
     packages = NULL,
 
-    # Whether to write the results to a file and where.
-    save = FALSE,
-    
-    # Backward competability (deprecated):
-    write, # if TRUE, results are written instead returned as data frame
+    # Whether to write the results to a file.
+    write = FALSE,
+
+    # Name of the file (without .txt extension).
     name,
 
     # Number of cores for parallel execution.
-    cores = 1,
-    
-    # Backward competability:
-    nCores,
+    nCores = 1,
 
     # Whether to show a progress bar.
-    progress = TRUE
+    progress = TRUE,
+
+    # Environment from which to export variables.
+    env = parent.frame()
 ) {
-  
-  # Check old arguments:
+
+  # Check deprecated 'reps' argument:
   if (!missing(reps)){
     warning("'reps' argument is deprecated, use 'replications' instead.", call. = FALSE)
     replications <- reps
   }
-  
-  if (!missing(write) || !missing(name)){
-    warning("'write' and 'name' arguments are deprecated, use 'save' instead. Overwriting save argument now!", call. = FALSE)
-    
-    if (missing(name)){
-      save <- write
+
+  # Capture dots and check for deprecated new-style argument names:
+  dots <- list(...)
+
+  if ("cores" %in% names(dots)){
+    warning("'cores' argument is deprecated and will be removed soon, use 'nCores' instead.", call. = FALSE)
+    nCores <- dots[["cores"]]
+    dots[["cores"]] <- NULL
+  }
+
+  # Determine save path:
+  save_path <- NULL
+
+  if ("save" %in% names(dots)){
+    warning("'save' argument is deprecated and will be removed soon, use 'write' and 'name' instead.", call. = FALSE)
+    save_val <- dots[["save"]]
+    dots[["save"]] <- NULL
+    if (is.character(save_val)){
+      save_path <- save_val
+    } else if (isTRUE(save_val)) {
+      save_path <- tempfile(pattern = "parSim", fileext = ".txt")
+    }
+  } else if (isTRUE(write)) {
+    if (!missing(name)) {
+      save_path <- paste0(name, ".txt")
     } else {
-      save <- paste0(name,".txt")
+      save_path <- tempfile(pattern = "parSim", fileext = ".txt")
     }
   }
-  
-  if (!missing(nCores)){
-    warning("'nCores' argument is deprecated, use 'cores' instead.", call. = FALSE)
-    cores <- nCores
-  }
-  
-  
-  
+
     # Expand all conditions into a simulation design.
     design <- do.call(
         what = expand.grid,
         args = c(
             # The provided conditions.
-            list(...),
+            dots,
 
             # The replications.
             list(
@@ -140,7 +151,7 @@ parSim <- function(
     }
 
     # Execute the task in parallel if requested.
-    if (cores > 1) {
+    if (nCores > 1) {
         # Get the user's progress tracking preference.
         user_progress <- parabar::get_option("progress_track")
 
@@ -159,7 +170,7 @@ parSim <- function(
         # Start a `parabar` backend.
         backend <- parabar::start_backend(
             # The number of cores.
-            cores = cores,
+            cores = nCores,
 
             # The cluster type.
             cluster_type = "psock",
@@ -174,23 +185,21 @@ parSim <- function(
             parabar::stop_backend(backend)
         }, add = TRUE)
 
-        # Prepare required cluster exports.
-        variables <- c("design", "expr")
-
-        # Add any additional user exports.
-        variables <- c(variables, export, "packages")
-
-        # Export objects to the cluster.
+        # Export internal variables to the cluster.
         parabar::export(
-            # Where to export.
             backend = backend,
-
-            # What to export.
-            variables = variables,
-
-            # From where to export (i.e., current function's environment).
+            variables = c("design", "expr", "packages"),
             environment = environment()
         )
+
+        # Export user variables from the caller's environment.
+        if (!is.null(export)) {
+            parabar::export(
+                backend = backend,
+                variables = export,
+                environment = env
+            )
+        }
 
         # Load any required packages if provided (i.e., to keep the task neat).
         if (!is.null(packages)) {
@@ -215,7 +224,7 @@ parSim <- function(
     }
 
     # If parallel execution is not requested.
-    if (cores < 2) {
+    if (nCores < 2) {
         # If progress tracking is requested.
         if (progress) {
             # # Get the type of progress bar to use.
@@ -268,28 +277,16 @@ parSim <- function(
     output <- design %>%
         dplyr::left_join(results, by = "id")
 
-    # If the user wants to save the results but did not provide a path.
-    if (is.logical(save) && save) {
-        # Generate a temporary file at the appropriate `OS` location.
-        save <- tempfile(pattern = "parSim", fileext = ".txt")
-    }
+    # Save results if requested.
+    if (!is.null(save_path)) {
+        save_path <- trimws(save_path)
 
-    # If the user wants to save the results.
-    if (is.character(save)) {
-        # Trim whitespace.
-        save <- trimws(save)
-
-        # If the filename provided is obviously invalid.
-        if (save == "") {
-            # Throw.
-            stop("Invalid file name for 'save' argument.", call. = FALSE)
+        if (save_path == "") {
+            stop("Invalid file name for 'name' argument.", call. = FALSE)
         }
 
-        # Otherwise write the results.
-        utils::write.table(x = output, file = save, row.names = FALSE)
-
-        # Inform the user about the file location.
-        message(paste0("Saved results at location: '", save, "'."))
+        utils::write.table(x = output, file = save_path, row.names = FALSE)
+        message(paste0("Saved results at location: '", save_path, "'."))
     }
 
     # Return the output.

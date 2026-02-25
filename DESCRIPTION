@@ -1,6 +1,6 @@
 Package: parSim
 Title: Parallel Simulator
-Version: 0.2.0
+Version: 0.3.0
 Authors@R:
     c(
         person(
@@ -38,6 +38,7 @@ License: GPL-2
 URL: https://github.com/SachaEpskamp/parSim
 BugReports: https://github.com/SachaEpskamp/parSim/issues
 Imports:
+    data.table,
     dplyr,
     parabar,
     utils

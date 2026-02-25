@@ -13,12 +13,11 @@ parSim(
     exclude = NULL,
     export = NULL,
     packages = NULL,
-    save = FALSE,
-    write,
+    write = FALSE,
     name,
-    cores = 1,
-    nCores,
-    progress = TRUE
+    nCores = 1,
+    progress = TRUE,
+    env = parent.frame()
 )
 }
 
@@ -67,7 +66,7 @@ parSim(
     \item{export}{
         A character string containing the names of the objects to be exported to
         the parallel backend. This argument is only relevant when using parallel
-        execution (i.e., \code{cores > 1}). Defaults to \code{NULL} (i.e.,
+        execution (i.e., \code{nCores > 1}). Defaults to \code{NULL} (i.e.,
         indicating that no objects are to be exported).
     }
 
@@ -75,22 +74,27 @@ parSim(
         A character vector containing the names of the packages to be loaded on
         the parallel backend. For example \code{packages = c("bootnet",
         "qgraph")}. This argument is only relevant when using parallel execution
-        (i.e., \code{cores > 1}). Defaults to \code{NULL} (i.e., indicating that
+        (i.e., \code{nCores > 1}). Defaults to \code{NULL} (i.e., indicating that
         no packages are to be loaded).
     }
 
-    \item{save}{
-        A logical or string value controlling whether and where to save the
-        results to a text file. If \code{save = TRUE} the results are saved to a
-        temporary file (i.e., created using
-        \code{\link[base:tempfile]{base::tempfile}}). If \code{save} is a
-        string, the results are saved to the specified file. If \code{save =
-        FALSE} the results are not saved. Upon saving the results, a message is
-        printed to the console indicating the location of the saved file.
-        Defaults to \code{FALSE}.
+    \item{write}{
+        Logical, should the results be written to a file? If \code{write = TRUE}
+        and \code{name} is not provided, results are saved to a temporary file
+        (i.e., created using \code{\link[base:tempfile]{base::tempfile}}). If
+        \code{write = TRUE} and \code{name} is provided, results are saved to
+        \code{name.txt}. If \code{write = FALSE} the results are not saved.
+        Upon saving the results, a message is printed to the console indicating
+        the location of the saved file. Defaults to \code{FALSE}.
     }
 
-    \item{cores}{
+    \item{name}{
+        A character string specifying the base name of the file to save the
+        results to (a \code{.txt} extension is appended automatically). Only
+        used when \code{write = TRUE}.
+    }
+
+    \item{nCores}{
         An integer value indicating the number of cores to use for parallel
         execution. Setting this argument to \code{1} implies that the simulation
         conditions are run sequentially. Using a value greater than \code{1}
@@ -98,22 +102,19 @@ parSim(
         \code{\link[parabar:parabar-package]{parabar::parabar}} backend with the
         specified number of cores. Defaults to \code{1}.
     }
-    
-        \item{nCores}{
-       Deprecated alternative to 'cores'
-    }
-
 
     \item{progress}{
         A logical value indicating whether to show a progress bar while running
         the simulation. Defaults to \code{TRUE}.
     }
-      \item{write}{
-DEPRECATED: Logical, should the results be written to a file instead of returned as a dataframe?
-}
-  \item{name}{
-DEPRECATED: Name of the file if \code{write = TRUE}
-}
+
+    \item{env}{
+        The environment from which to export variables specified in the
+        \code{export} argument. Defaults to \code{\link[base:sys.parent]{parent.frame()}}
+        (i.e., the caller's environment). This is relevant when calling
+        \code{parSim} from within a function, where variables to export may not
+        be in the global environment.
+    }
 }
 
 \value{
@@ -196,10 +197,10 @@ results <- parSim(
     packages = NULL,
 
     # Do not save the results.
-    save = FALSE,
+    write = FALSE,
 
     # Execute the simulation on a single core.
-    cores = 1,
+    nCores = 1,
 
     # Show the progress bar.
     progress = TRUE
@@ -257,10 +258,10 @@ results <- parSim(
     packages = NULL,
 
     # Save the results to a temporary file.
-    save = TRUE,
+    write = TRUE,
 
     # Execute the simulation in parallel.
-    cores = 2,
+    nCores = 2,
 
     # Show the progress bar.
     progress = TRUE

@@ -1,8 +1,10 @@
 # Package exports.
 export(configure_bar)
 export(parSim)
+export(parSim_dt)
 
 # Package imports.
+importFrom(data.table,":=")
 importFrom(dplyr,"%>%")
 importFrom(dplyr,bind_rows)
 importFrom(dplyr,filter)
