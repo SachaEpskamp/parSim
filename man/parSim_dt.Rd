@@ -21,7 +21,8 @@ parSim_dt(
     exclude,
     debug = FALSE,
     progressbar = TRUE,
-    env = parent.frame()
+    env = parent.frame(),
+    seed = NULL
 )
 }
 
@@ -75,6 +76,14 @@ parSim_dt(
     \item{progressbar}{
         Logical. If \code{TRUE}, shows a progress bar while running the
         simulation. Defaults to \code{TRUE}.
+    }
+
+    \item{seed}{
+        Optional integer. When supplied, one L'Ecuyer-CMRG random-number
+        substream is derived per simulation condition (per design row), making
+        the results fully reproducible \emph{and identical for any value of
+        \code{nCores}}. The caller's RNG state is restored afterwards.
+        Defaults to \code{NULL} (no seeding).
     }
 
     \item{env}{

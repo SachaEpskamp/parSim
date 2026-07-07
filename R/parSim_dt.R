@@ -9,7 +9,8 @@ parSim_dt <- function(
     exclude, # List with dplyr calls to exclude cases. Written as formula
     debug = FALSE,
     progressbar = TRUE,
-    env = parent.frame()
+    env = parent.frame(),
+    seed = NULL # Seed for reproducible results (identical for any nCores).
 ){
 
   # Avoid "no visible binding for global variable" NOTEs from R CMD check:
@@ -34,14 +35,44 @@ parSim_dt <- function(
     AllConditions <- AllConditions[keep]
   }
 
-  # Randomize:
   totCondition <- nrow(AllConditions)
+
+  # Reproducibility (see parSim.R): save/restore the caller's RNG state and
+  # seed with L'Ecuyer-CMRG so the shuffle and the per-row streams below are
+  # deterministic for any nCores:
+  if (!is.null(seed)) {
+    haveSeed <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+    oldSeed <- if (haveSeed) get(".Random.seed", envir = globalenv()) else NULL
+    oldKind <- RNGkind()
+    on.exit({
+      RNGkind(oldKind[1], normal.kind = oldKind[2], sample.kind = oldKind[3])
+      if (!is.null(oldSeed)) {
+        assign(".Random.seed", oldSeed, envir = globalenv())
+      } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
+        rm(".Random.seed", envir = globalenv())
+      }
+    }, add = TRUE)
+    set.seed(seed, kind = "L'Ecuyer-CMRG")
+  }
+
+  # Randomize:
   if (totCondition > 1) {
     AllConditions <- AllConditions[sample(seq_len(totCondition)), ]
   }
 
   # Total conditions:
   AllConditions[, id := seq_len(totCondition)]
+
+  # One RNG substream per design row (indexed by id):
+  streams <- NULL
+  if (!is.null(seed)) {
+    streams <- vector("list", totCondition)
+    sstate <- get(".Random.seed", envir = globalenv())
+    for (i in seq_len(totCondition)) {
+      sstate <- parallel::nextRNGStream(sstate)
+      streams[[i]] <- sstate
+    }
+  }
 
   # Deparse the expression:
   expr <- as.expression(substitute(expression))
@@ -52,6 +83,10 @@ parSim_dt <- function(
 
   # Prepare the task function:
   task <- function(i){
+    # Use this condition's own RNG stream:
+    if (!is.null(seed)) {
+      assign(".Random.seed", streams[[AllConditions$id[i]]], envir = globalenv())
+    }
     if (debug){
       cat("\nRunning iteration:",i," / ",nrow(AllConditions),"\nTime:",as.character(Sys.time()),"\n")
       print(AllConditions[i,])
@@ -97,7 +132,7 @@ parSim_dt <- function(
     # Export internal variables to the cluster.
     parabar::export(
       backend = backend,
-      variables = c("AllConditions", "expr", "debug", "enclosEnv"),
+      variables = c("AllConditions", "expr", "debug", "enclosEnv", "streams", "seed"),
       environment = environment()
     )
 

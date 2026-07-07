@@ -33,6 +33,9 @@ parSim <- function(
     # Whether to show a progress bar.
     progress = TRUE,
 
+    # Seed for reproducible results (identical for any nCores). NULL = off.
+    seed = NULL,
+
     # Environment from which to export variables.
     env = parent.frame()
 ) {
@@ -102,6 +105,25 @@ parSim <- function(
     # Compute the sequence of conditions.
     conditions <- seq_len(n_conditions)
 
+    # Reproducibility: with a non-NULL seed, results are identical for any
+    # value of nCores. The caller's RNG state is saved and restored (CRAN
+    # policy); the design shuffle below then uses the seeded RNG, and one
+    # L'Ecuyer-CMRG substream is derived per design row further down.
+    if (!is.null(seed)) {
+        haveSeed <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+        oldSeed <- if (haveSeed) get(".Random.seed", envir = globalenv()) else NULL
+        oldKind <- RNGkind()
+        on.exit({
+            RNGkind(oldKind[1], normal.kind = oldKind[2], sample.kind = oldKind[3])
+            if (!is.null(oldSeed)) {
+                assign(".Random.seed", oldSeed, envir = globalenv())
+            } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
+                rm(".Random.seed", envir = globalenv())
+            }
+        }, add = TRUE)
+        set.seed(seed, kind = "L'Ecuyer-CMRG")
+    }
+
     # Randomize the order of the conditions.
     if (n_conditions > 1) {
         # Randomize.
@@ -110,6 +132,19 @@ parSim <- function(
 
     # Attach an ID to each condition.
     design$id <- conditions
+
+    # Derive one RNG substream per design row (indexed by its id), so every
+    # condition draws from its own reproducible stream no matter which worker
+    # (or the main process) evaluates it:
+    streams <- NULL
+    if (!is.null(seed)) {
+        streams <- vector("list", n_conditions)
+        sstate <- get(".Random.seed", envir = globalenv())
+        for (i in conditions) {
+            sstate <- parallel::nextRNGStream(sstate)
+            streams[[i]] <- sstate
+        }
+    }
 
     # Capture the call and substitute any symbols in the current environment.
     expr <- substitute(expression)
@@ -126,6 +161,11 @@ parSim <- function(
     task <- function(condition) {
         # Record the condition ID.
         id = design$id[condition]
+
+        # Use this condition's own RNG stream:
+        if (!is.null(seed)) {
+            assign(".Random.seed", streams[[id]], envir = globalenv())
+        }
 
         # Simulate the current condition and return.
         tryCatch(
@@ -196,7 +236,7 @@ parSim <- function(
         # Export internal variables to the cluster.
         parabar::export(
             backend = backend,
-            variables = c("design", "expr", "packages", "enclosEnv"),
+            variables = c("design", "expr", "packages", "enclosEnv", "streams", "seed"),
             environment = environment()
         )
 

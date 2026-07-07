@@ -17,6 +17,7 @@ parSim(
     name,
     nCores = 1,
     progress = TRUE,
+    seed = NULL,
     env = parent.frame()
 )
 }
@@ -106,6 +107,14 @@ parSim(
     \item{progress}{
         A logical value indicating whether to show a progress bar while running
         the simulation. Defaults to \code{TRUE}.
+    }
+
+    \item{seed}{
+        Optional integer. When supplied, one L'Ecuyer-CMRG random-number
+        substream is derived per simulation condition (per design row), making
+        the results fully reproducible \emph{and identical for any value of
+        \code{nCores}}. The caller's RNG state is restored afterwards.
+        Defaults to \code{NULL} (no seeding).
     }
 
     \item{env}{

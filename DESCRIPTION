@@ -41,6 +41,7 @@ Imports:
     data.table,
     dplyr,
     parabar,
+    parallel,
     utils
 Encoding: UTF-8
 LazyData: true

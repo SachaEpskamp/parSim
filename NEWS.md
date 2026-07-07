@@ -1,5 +1,12 @@
 # parSim 0.3.1 (development)
 
+## New features
+
+* New `seed` argument in `parSim()` and `parSim_dt()`: one L'Ecuyer-CMRG RNG
+  substream is derived per simulation condition, so a seeded simulation is
+  fully reproducible and gives identical results for any value of `nCores`.
+  The caller's RNG state and RNG kind are restored afterwards.
+
 ## Bug fixes
 
 * `export`/`env` now also work when running sequentially (`nCores = 1`): the
