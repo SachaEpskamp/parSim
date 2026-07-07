@@ -57,8 +57,8 @@ parSim(
     }
 
     \item{exclude}{
-        A list of logical calls indicating the simulation conditions to exclude
-        cases, written as formula. For example, \code{exclude = sample_size ==
+        A single (unquoted) logical expression indicating the simulation
+        conditions to exclude. For example, \code{exclude = sample_size ==
         100 | beta == 0} will exclude all cases where \code{sample_size} is
         equal to \code{100} or \code{beta} is equal to \code{0}. Similarly,
         \code{exclude = sample_size == 100 & beta == 0} will exclude all cases
@@ -293,6 +293,7 @@ tail(results)
 }
 
 \seealso{
+    \code{\link{parSim_dt}},
     \code{\link[bootnet:bootnet]{bootnet::bootnet}},
     \link[parabar:par_lapply]{parabar::par_lapply}, and
     \link[parabar:configure_bar]{parabar::configure_bar}.

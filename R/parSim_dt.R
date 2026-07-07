@@ -13,6 +13,7 @@ parSim_dt <- function(
     name,
     nCores = 1,
     export = NULL, # character string of global objects to export to the cluster.
+    packages = NULL, # character vector of packages to load on the cluster.
     exclude, # List with dplyr calls to exclude cases. Written as formula
     debug = FALSE,
     progress = TRUE,
@@ -206,6 +207,14 @@ parSim_dt <- function(
     parabar::evaluate(backend, {
       requireNamespace("data.table", quietly = TRUE)
     })
+
+    # Load any required packages if provided:
+    if (!is.null(packages)) {
+      parabar::export(backend, variables = "packages", environment = environment())
+      parabar::evaluate(backend, {
+        lapply(packages, library, character.only = TRUE)
+      })
+    }
 
     # Execute the task in parallel.
     Results <- parabar::par_lapply(

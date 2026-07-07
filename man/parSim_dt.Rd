@@ -19,6 +19,7 @@ parSim_dt(
     name,
     nCores = 1,
     export = NULL,
+    packages = NULL,
     exclude,
     debug = FALSE,
     progress = TRUE,
@@ -69,6 +70,12 @@ parSim_dt(
         execution. Defaults to \code{1}.
     }
 
+    \item{packages}{
+        A character vector containing the names of packages to be loaded on
+        the parallel backend (only relevant when \code{nCores > 1}).
+        Defaults to \code{NULL}.
+    }
+
     \item{export}{
         A character vector of global objects to export to the cluster.
         Defaults to \code{NULL} (nothing exported).
@@ -83,7 +90,9 @@ parSim_dt(
 
     \item{debug}{
         Logical. If \code{TRUE}, prints iteration details during execution.
-        Defaults to \code{FALSE}.
+        Only useful when running sequentially (\code{nCores = 1}); in
+        parallel runs the output goes to the worker consoles and is not
+        visible. Defaults to \code{FALSE}.
     }
 
     \item{progress}{

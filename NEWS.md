@@ -24,6 +24,9 @@
 
 ## New features
 
+* `parSim_dt()` gained the `packages` argument of `parSim()` (packages to load
+  on the parallel workers).
+
 * New `seed` argument in `parSim()` and `parSim_dt()`: one L'Ecuyer-CMRG RNG
   substream is derived per simulation condition, so a seeded simulation is
   fully reproducible and gives identical results for any value of `nCores`.
