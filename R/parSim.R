@@ -91,6 +91,17 @@ parSim <- function(
             call. = FALSE)
   }
 
+  # Validate the conditions:
+  condLengths <- vapply(dots, length, integer(1))
+  if (any(condLengths == 0)){
+    stop("Simulation condition(s) ", paste0("'", names(dots)[condLengths == 0], "'", collapse = ", "),
+         " have length 0.", call. = FALSE)
+  }
+
+  if (length(replications) != 1 || is.na(replications) || replications < 1){
+    stop("'replications' must be a single value >= 1.", call. = FALSE)
+  }
+
   # Validate nCores:
   nCores <- as.integer(nCores)
   if (length(nCores) != 1 || is.na(nCores) || nCores < 1){
@@ -119,6 +130,10 @@ parSim <- function(
     if (!is.null(exclude)) {
         # Dispose of the excluded conditions.
         design <- design[!eval(exclude, design, enclos = env), ]
+    }
+
+    if (nrow(design) == 0){
+        stop("No simulation conditions remain after applying 'exclude' (design has 0 rows).", call. = FALSE)
     }
 
     # Get the total number of conditions.

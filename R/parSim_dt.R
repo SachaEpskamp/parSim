@@ -55,6 +55,17 @@ parSim_dt <- function(
             call. = FALSE)
   }
 
+  # Validate the conditions:
+  condLengths <- vapply(dots, length, integer(1))
+  if (any(condLengths == 0)){
+    stop("Simulation condition(s) ", paste0("'", names(dots)[condLengths == 0], "'", collapse = ", "),
+         " have length 0.", call. = FALSE)
+  }
+
+  if (length(replications) != 1 || is.na(replications) || replications < 1){
+    stop("'replications' must be a single value >= 1.", call. = FALSE)
+  }
+
   # Expand all conditions:
   AllConditions <- data.table::data.table(do.call(expand.grid, c(dots, list(replication = seq_len(replications), stringsAsFactors = FALSE))))
 
@@ -65,6 +76,10 @@ parSim_dt <- function(
     keep <- !eval(parse(text = paste0("(", paste(exclude, collapse = ") | ("), ")")),
                   envir = AllConditions, enclos = env)
     AllConditions <- AllConditions[keep]
+  }
+
+  if (nrow(AllConditions) == 0){
+    stop("No simulation conditions remain after applying 'exclude' (design has 0 rows).", call. = FALSE)
   }
 
   totCondition <- nrow(AllConditions)
