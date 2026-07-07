@@ -1,5 +1,22 @@
 # parSim 0.3.1 (development)
 
+## Breaking changes / deprecations
+
+* `parSim_dt()` now takes `replications` and `progress` as its primary
+  arguments (harmonizing its API with `parSim()`). The old `reps` and
+  `progressbar` arguments are deprecated: they are still accepted but issue a
+  deprecation warning.
+* The output columns of `parSim_dt()` have been renamed to match `parSim()`:
+  `rep` -> `replication` and `errorMessage` -> `message`. The `message` column
+  is now `NA` (rather than `""`) for successful rows.
+* `parSim_dt(write = TRUE)` now writes to a temporary file when `name` is
+  missing (instead of erroring), reports the path with a message, and returns
+  the results invisibly instead of `NULL`.
+* In both `parSim()` and `parSim_dt()`, design conditions passed via `...`
+  whose names collide with a function argument (e.g. `replications`, `nCores`,
+  `progress`) now trigger a warning, since they would otherwise silently become
+  a crossed design factor.
+
 ## New features
 
 * New `seed` argument in `parSim()` and `parSim_dt()`: one L'Ecuyer-CMRG RNG

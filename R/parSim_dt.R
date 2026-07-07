@@ -1,30 +1,56 @@
+# Avoid "no visible binding for global variable" NOTEs from R CMD check for the
+# data.table columns assigned by reference below. Declared at namespace level so
+# that base::message() remains usable inside the function body (a local dummy
+# 'message <- NULL' would mask it):
+utils::globalVariables(c("id", "message"))
+
 parSim_dt <- function(
     ..., # Simulation conditions
     expression, # R expression ending in data.frame of results
-    reps = 1,
+    replications = 1,
+    reps, # Deprecated, use 'replications'.
     write = FALSE, # if TRUE, results are written instead returned as data frame
     name,
     nCores = 1,
-    export, # character string of global objects to export to the cluster.
+    export = NULL, # character string of global objects to export to the cluster.
     exclude, # List with dplyr calls to exclude cases. Written as formula
     debug = FALSE,
-    progressbar = TRUE,
+    progress = TRUE,
+    progressbar, # Deprecated, use 'progress'.
     env = parent.frame(),
     seed = NULL # Seed for reproducible results (identical for any nCores).
 ){
 
-  # Avoid "no visible binding for global variable" NOTEs from R CMD check:
-  id <- errorMessage <- NULL
+  # Check deprecated 'reps' argument:
+  if (!missing(reps)){
+    warning("'reps' argument is deprecated, use 'replications' instead.", call. = FALSE)
+    replications <- reps
+  }
 
-  if (write && missing(name)){
-    stop("Provide the argument 'name' if write = TRUE")
+  # Check deprecated 'progressbar' argument:
+  if (!missing(progressbar)){
+    warning("'progressbar' argument is deprecated, use 'progress' instead.", call. = FALSE)
+    if (missing(progress)) progress <- progressbar
   }
 
   # Collect the conditions:
   dots <- list(...)
 
+  # Guard against design conditions that collide with argument names of
+  # parSim()/parSim_dt() (e.g. passing replications = 100 to the function
+  # that spells it differently would silently become a crossed design factor):
+  reservedArgs <- c("replications","reps","progress","progressbar","nCores","cores",
+                    "write","save","name","export","packages","exclude","expression",
+                    "env","debug","seed")
+  clash <- intersect(names(dots), reservedArgs)
+  if (length(clash) > 0){
+    warning("Design condition(s) ", paste0("'", clash, "'", collapse = ", "),
+            " have the same name as a parSim/parSim_dt argument -- did you mean to pass them as arguments?",
+            call. = FALSE)
+  }
+
   # Expand all conditions:
-  AllConditions <- data.table::data.table(do.call(expand.grid, c(dots, list(rep = seq_len(reps), stringsAsFactors = FALSE))))
+  AllConditions <- data.table::data.table(do.call(expand.grid, c(dots, list(replication = seq_len(replications), stringsAsFactors = FALSE))))
 
   # Exclude cases: each element of 'exclude' is a logical expression; any row
   # matching at least one of them is REMOVED (elements are combined with OR,
@@ -94,11 +120,11 @@ parSim_dt <- function(
 
     tryRes <- try(eval(expr, envir = AllConditions[i], enclos = enclosEnv), silent = TRUE)
     if (inherits(tryRes, "try-error")) {
-      return(data.table::data.table(error = TRUE, errorMessage = as.character(tryRes), id = AllConditions$id[i]))
+      return(data.table::data.table(error = TRUE, message = as.character(tryRes), id = AllConditions$id[i]))
     }
 
     dt <- data.table::as.data.table(tryRes)
-    dt[, `:=`(id = AllConditions$id[i], error = FALSE, errorMessage = '')]
+    dt[, `:=`(id = AllConditions$id[i], error = FALSE, message = NA_character_)]
     dt
   }
 
@@ -107,7 +133,7 @@ parSim_dt <- function(
     user_progress <- parabar::get_option("progress_track")
 
     # Sync the progress tracking.
-    parabar::set_option("progress_track", progressbar)
+    parabar::set_option("progress_track", progress)
 
     # Restore on exit.
     on.exit({
@@ -115,7 +141,7 @@ parSim_dt <- function(
     })
 
     # Determine the backend type.
-    backend_type <- if (progressbar) "async" else "sync"
+    backend_type <- if (progress) "async" else "sync"
 
     # Start a parabar backend.
     backend <- parabar::start_backend(
@@ -137,7 +163,7 @@ parSim_dt <- function(
     )
 
     # Export user variables from the caller's environment.
-    if (!missing(export)){
+    if (!is.null(export)){
       parabar::export(
         backend = backend,
         variables = export,
@@ -159,7 +185,7 @@ parSim_dt <- function(
 
   } else {
 
-    if (progressbar) {
+    if (progress) {
       # Use parabar progress bar for sequential execution.
       bar_type <- parabar::get_option("progress_bar_type")
       bar_config <- parabar::get_option("progress_bar_config")[[bar_type]]
@@ -188,16 +214,17 @@ parSim_dt <- function(
 
   # merge the results into a data.table
   Results <- data.table::rbindlist(Results, fill = TRUE)
-  Results[, errorMessage := as.character(errorMessage)]
+  Results[, message := as.character(message)]
 
   # left-join results to conditions
   AllResults <- merge(AllConditions, Results, by = "id", all.x = TRUE)
 
   if (write) {
-    txtFile <- paste0(name,".txt")
+    txtFile <- if (!missing(name)) paste0(name, ".txt") else tempfile(pattern = "parSim", fileext = ".txt")
     data.table::fwrite(AllResults, file = txtFile, sep = "\t", col.names = TRUE, append = FALSE)
+    message(paste0("Saved results at location: '", txtFile, "'."))
 
-    return(NULL)
+    return(invisible(AllResults))
   } else {
     return(AllResults)
   }

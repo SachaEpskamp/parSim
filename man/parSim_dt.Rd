@@ -13,14 +13,16 @@ The function uses the more efficient data.table in its internal code instead of 
 parSim_dt(
     ...,
     expression,
-    reps = 1,
+    replications = 1,
+    reps,
     write = FALSE,
     name,
     nCores = 1,
-    export,
+    export = NULL,
     exclude,
     debug = FALSE,
-    progressbar = TRUE,
+    progress = TRUE,
+    progressbar,
     env = parent.frame(),
     seed = NULL
 )
@@ -38,19 +40,28 @@ parSim_dt(
         data frames are dropped; put identifiers in a proper column if needed.
     }
 
-    \item{reps}{
+    \item{replications}{
         Integer. The number of replications for each condition. Defaults to \code{1}.
     }
 
+    \item{reps}{
+        Deprecated. Alias for \code{replications}, kept for backward
+        compatibility; if supplied it overrides \code{replications} and a
+        deprecation warning is issued.
+    }
+
     \item{write}{
-        Logical, should the results be written to a file instead of returned as
-        a data frame? If \code{TRUE}, the \code{name} argument must be provided.
-        Defaults to \code{FALSE}.
+        Logical, should the results be written to a file? If \code{TRUE}, the
+        results are written to \code{paste0(name, ".txt")} when \code{name} is
+        provided, or to a temporary file (via
+        \code{\link[base:tempfile]{tempfile}}) otherwise, and the path is
+        reported with a message. Unlike previous versions, the results are also
+        returned (invisibly) rather than \code{NULL}. Defaults to \code{FALSE}.
     }
 
     \item{name}{
         Name of the file if \code{write = TRUE}. A \code{.txt} extension is
-        appended automatically.
+        appended automatically. If omitted, a temporary file is used.
     }
 
     \item{nCores}{
@@ -60,6 +71,7 @@ parSim_dt(
 
     \item{export}{
         A character vector of global objects to export to the cluster.
+        Defaults to \code{NULL} (nothing exported).
     }
 
     \item{exclude}{
@@ -74,9 +86,15 @@ parSim_dt(
         Defaults to \code{FALSE}.
     }
 
-    \item{progressbar}{
+    \item{progress}{
         Logical. If \code{TRUE}, shows a progress bar while running the
         simulation. Defaults to \code{TRUE}.
+    }
+
+    \item{progressbar}{
+        Deprecated. Alias for \code{progress}, kept for backward
+        compatibility; if supplied (and \code{progress} is not) it sets
+        \code{progress} and a deprecation warning is issued.
     }
 
     \item{seed}{
@@ -105,7 +123,10 @@ code they want to simulate with parSim.
 
 \value{
 A \code{\link[data.table:data.table]{data.table}} with the results of each
-iteration in each row. Returns \code{NULL} if \code{write = TRUE}.
+iteration in each row, including the columns \code{replication}, \code{id},
+\code{error} (logical), and \code{message} (the error message for failed rows,
+\code{NA} on success). When \code{write = TRUE} the same data.table is returned
+invisibly (in addition to being written to file).
 }
 
 \author{

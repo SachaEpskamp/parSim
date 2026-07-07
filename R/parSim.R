@@ -75,6 +75,19 @@ parSim <- function(
     }
   }
 
+  # Guard against design conditions that collide with argument names of
+  # parSim()/parSim_dt() (e.g. passing replications = 100 to the function
+  # that spells it differently would silently become a crossed design factor):
+  reservedArgs <- c("replications","reps","progress","progressbar","nCores","cores",
+                    "write","save","name","export","packages","exclude","expression",
+                    "env","debug","seed")
+  clash <- intersect(names(dots), reservedArgs)
+  if (length(clash) > 0){
+    warning("Design condition(s) ", paste0("'", clash, "'", collapse = ", "),
+            " have the same name as a parSim/parSim_dt argument -- did you mean to pass them as arguments?",
+            call. = FALSE)
+  }
+
     # Expand all conditions into a simulation design.
     design <- do.call(
         what = expand.grid,
