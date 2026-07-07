@@ -28,7 +28,10 @@ parSim(
         For example, if you want to vary the sample size between \verb{\{100,
         250, 1000\}} and a regression slope between \verb{\{0, 0.5, 1\}}, you
         can assign the first two arguments as \code{sample_size = c(100, 250,
-        1000)} and \code{beta = c(0, 0.5, 1)}.
+        1000)} and \code{beta = c(0, 0.5, 1)}. Condition names should not
+        collide with argument names of \code{parSim} or \code{parSim_dt}; a
+        warning is given if they do. The columns \code{id}, \code{error},
+        \code{message} and \code{replication} are reserved for the output.
     }
 
     \item{expression}{

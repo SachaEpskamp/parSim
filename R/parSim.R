@@ -49,8 +49,9 @@ parSim <- function(
   # Capture dots and check for deprecated new-style argument names:
   dots <- list(...)
 
-  if ("cores" %in% names(dots)){
-    warning("'cores' argument is deprecated and will be removed soon, use 'nCores' instead.", call. = FALSE)
+  if ("cores" %in% names(dots) && is.numeric(dots[["cores"]]) &&
+      length(dots[["cores"]]) == 1 && !is.na(dots[["cores"]])){
+    warning("'cores' argument is deprecated and will be removed in a future version, use 'nCores' instead.", call. = FALSE)
     nCores <- dots[["cores"]]
     dots[["cores"]] <- NULL
   }
@@ -58,8 +59,10 @@ parSim <- function(
   # Determine save path:
   save_path <- NULL
 
-  if ("save" %in% names(dots)){
-    warning("'save' argument is deprecated and will be removed soon, use 'write' and 'name' instead.", call. = FALSE)
+  if ("save" %in% names(dots) &&
+      ((is.logical(dots[["save"]]) && length(dots[["save"]]) == 1) ||
+       (is.character(dots[["save"]]) && length(dots[["save"]]) == 1 && !is.na(dots[["save"]])))){
+    warning("'save' argument is deprecated and will be removed in a future version, use 'write' and 'name' instead.", call. = FALSE)
     save_val <- dots[["save"]]
     dots[["save"]] <- NULL
     if (is.character(save_val)){
@@ -86,6 +89,12 @@ parSim <- function(
     warning("Design condition(s) ", paste0("'", clash, "'", collapse = ", "),
             " have the same name as a parSim/parSim_dt argument -- did you mean to pass them as arguments?",
             call. = FALSE)
+  }
+
+  # Validate nCores:
+  nCores <- as.integer(nCores)
+  if (length(nCores) != 1 || is.na(nCores) || nCores < 1){
+    stop("'nCores' must be a single integer >= 1.", call. = FALSE)
   }
 
     # Expand all conditions into a simulation design.

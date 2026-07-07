@@ -44,6 +44,10 @@
   data-frame results now produce identical output schemas.
 * Removed `LazyData: true` from DESCRIPTION (the package has no data
   directory), fixing an R CMD check NOTE.
+* The deprecated `cores`/`save` arguments are now only intercepted when they
+  look like the deprecated scalar arguments; a design condition legitimately
+  named `cores` (e.g. `cores = c(1, 2, 4)`) is kept as a condition. `nCores`
+  is validated to be a single integer >= 1.
 
 # parSim 0.3.0
 

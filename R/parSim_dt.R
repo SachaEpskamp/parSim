@@ -33,6 +33,12 @@ parSim_dt <- function(
     if (missing(progress)) progress <- progressbar
   }
 
+  # Validate nCores:
+  nCores <- as.integer(nCores)
+  if (length(nCores) != 1 || is.na(nCores) || nCores < 1){
+    stop("'nCores' must be a single integer >= 1.", call. = FALSE)
+  }
+
   # Collect the conditions:
   dots <- list(...)
 
