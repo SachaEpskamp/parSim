@@ -93,7 +93,7 @@ parSim <- function(
     # If the user wants to exclude certain conditions.
     if (!is.null(exclude)) {
         # Dispose of the excluded conditions.
-        design <- design[!eval(exclude, design), ]
+        design <- design[!eval(exclude, design, enclos = env), ]
     }
 
     # Get the total number of conditions.
@@ -114,6 +114,14 @@ parSim <- function(
     # Capture the call and substitute any symbols in the current environment.
     expr <- substitute(expression)
 
+    # Enclosure for symbol lookup when evaluating the expression: the caller's
+    # environment ('env') when running sequentially, and the worker's global
+    # environment (where parabar::export() places exported objects) when
+    # running in parallel. globalenv() serializes as a reference, so on a
+    # worker it resolves to that worker's global environment. This makes
+    # 'export'/'env' behave identically in sequential and parallel runs.
+    enclosEnv <- if (nCores > 1) globalenv() else env
+
     # Prepare the task function.
     task <- function(condition) {
         # Record the condition ID.
@@ -124,7 +132,7 @@ parSim <- function(
             # Expression to try.
             expr = {
                 # Run the actual simulation and return.
-                result <- eval(expr, envir = design[condition, ])
+                result <- eval(expr, envir = design[condition, ], enclos = enclosEnv)
 
                 # Coerce to data frame.
                 result <- as.data.frame(result)
@@ -188,7 +196,7 @@ parSim <- function(
         # Export internal variables to the cluster.
         parabar::export(
             backend = backend,
-            variables = c("design", "expr", "packages"),
+            variables = c("design", "expr", "packages", "enclosEnv"),
             environment = environment()
         )
 

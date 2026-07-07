@@ -79,8 +79,11 @@ parSim_dt(
 
     \item{env}{
         The environment from which to export variables specified in the
-        \code{export} argument. Defaults to \code{\link[base:sys.parent]{parent.frame()}}
-        (i.e., the caller's environment).
+        \code{export} argument, and in which unresolved symbols of
+        \code{expression} and \code{exclude} are looked up when running
+        sequentially. Defaults to \code{\link[base:sys.parent]{parent.frame()}}
+        (i.e., the caller's environment). \code{export}/\code{env} behave
+        identically for sequential (\code{nCores = 1}) and parallel runs.
     }
 }
 

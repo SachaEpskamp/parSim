@@ -2,6 +2,13 @@
 
 ## Bug fixes
 
+* `export`/`env` now also work when running sequentially (`nCores = 1`): the
+  simulation expression (and `exclude`) are evaluated with the caller's
+  environment as enclosure, so objects local to a calling function are found
+  without being in the global environment. Previously this only worked in
+  parallel runs (the completion of the fix for GitHub issue #10), making
+  "works with 8 cores, fails with 1 core" a confusing failure mode.
+
 * BREAKING BUG FIX: the `exclude` argument of `parSim_dt()` did the opposite of
   its documentation -- it *kept* only the rows matching the exclusion
   expressions instead of removing them. Matching rows are now removed. Multiple

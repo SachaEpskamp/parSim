@@ -29,7 +29,8 @@ parSim_dt <- function(
   # matching at least one of them is REMOVED (elements are combined with OR,
   # each wrapped in parentheses so operator precedence cannot leak across):
   if (!missing(exclude)) {
-    keep <- !AllConditions[, eval(parse(text = paste0("(", paste(exclude, collapse = ") | ("), ")")))]
+    keep <- !eval(parse(text = paste0("(", paste(exclude, collapse = ") | ("), ")")),
+                  envir = AllConditions, enclos = env)
     AllConditions <- AllConditions[keep]
   }
 
@@ -45,6 +46,10 @@ parSim_dt <- function(
   # Deparse the expression:
   expr <- as.expression(substitute(expression))
 
+  # Enclosure for symbol lookup (see parSim.R): caller's environment
+  # sequentially, worker's global environment in parallel:
+  enclosEnv <- if (nCores > 1) globalenv() else env
+
   # Prepare the task function:
   task <- function(i){
     if (debug){
@@ -52,7 +57,7 @@ parSim_dt <- function(
       print(AllConditions[i,])
     }
 
-    tryRes <- try(eval(expr, envir = AllConditions[i]), silent = TRUE)
+    tryRes <- try(eval(expr, envir = AllConditions[i], enclos = enclosEnv), silent = TRUE)
     if (inherits(tryRes, "try-error")) {
       return(data.table::data.table(error = TRUE, errorMessage = as.character(tryRes), id = AllConditions$id[i]))
     }
@@ -92,7 +97,7 @@ parSim_dt <- function(
     # Export internal variables to the cluster.
     parabar::export(
       backend = backend,
-      variables = c("AllConditions", "expr", "debug"),
+      variables = c("AllConditions", "expr", "debug", "enclosEnv"),
       environment = environment()
     )
 
