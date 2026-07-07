@@ -97,7 +97,7 @@ parSim_dt <- function(
       return(data.table::data.table(error = TRUE, errorMessage = as.character(tryRes), id = AllConditions$id[i]))
     }
 
-    dt <- data.table::as.data.table(tryRes, keep.rownames = TRUE)
+    dt <- data.table::as.data.table(tryRes)
     dt[, `:=`(id = AllConditions$id[i], error = FALSE, errorMessage = '')]
     dt
   }

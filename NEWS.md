@@ -22,6 +22,12 @@
   expressions are combined with OR (any match removes the row); previously they
   were combined with AND.
 
+* `parSim_dt()` no longer adds a spurious `rn` column when the simulation
+  expression returns a data frame (row names are dropped), so list and
+  data-frame results now produce identical output schemas.
+* Removed `LazyData: true` from DESCRIPTION (the package has no data
+  directory), fixing an R CMD check NOTE.
+
 # parSim 0.3.0
 
 ## Breaking changes

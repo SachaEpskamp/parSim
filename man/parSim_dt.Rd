@@ -34,7 +34,8 @@ parSim_dt(
     \item{expression}{
         An \code{R} expression that uses the simulation conditions as variable
         names. The expression must return a named \code{\link[base:list]{list}}
-        or a \code{\link[base:data.frame]{data.frame}}.
+        or a \code{\link[base:data.frame]{data.frame}}. Row names of returned
+        data frames are dropped; put identifiers in a proper column if needed.
     }
 
     \item{reps}{
