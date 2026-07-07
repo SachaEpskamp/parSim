@@ -215,6 +215,14 @@ parSim <- function(
                 # Coerce to data frame.
                 result <- as.data.frame(result)
 
+                # The columns id/error/message are reserved for the output;
+                # rename clashing user columns to <name>_result (a single
+                # aggregated warning is given after collection):
+                clash <- intersect(names(result), c("id", "error", "message"))
+                if (length(clash) > 0) {
+                    names(result)[match(clash, names(result))] <- paste0(clash, "_result")
+                }
+
                 # Prepare the task output.
                 result$id <- id
                 result$error <- FALSE
@@ -359,12 +367,32 @@ parSim <- function(
     # Bind them all.
     results <- dplyr::bind_rows(results)
 
+    # One aggregated warning for reserved-column renames (see task above):
+    renamed <- intersect(names(results), c("id_result", "error_result", "message_result"))
+    if (length(renamed) > 0) {
+        warning("The simulation expression returned reserved column name(s) ",
+                paste0("'", sub("_result$", "", renamed), "'", collapse = ", "),
+                "; they were renamed to ", paste0("'", renamed, "'", collapse = ", "), ".",
+                call. = FALSE)
+    }
+
     # Left join the results to the design by ID and restore the
     # expanded-design order:
     output <- design %>%
         dplyr::left_join(results, by = "id")
     output <- output[order(output$id), , drop = FALSE]
     rownames(output) <- NULL
+
+    # Warn when result columns duplicated design-variable names (the join
+    # suffixes them .x/.y):
+    sufBase <- sub("\\.(x|y)$", "", grep("\\.(x|y)$", names(output), value = TRUE))
+    dupBase <- unique(sufBase[duplicated(sufBase)])
+    if (length(dupBase) > 0) {
+        warning("The simulation expression returned column(s) with the same name as design condition(s): ",
+                paste0("'", dupBase, "'", collapse = ", "),
+                ". The design columns carry suffix '.x', the returned columns '.y'.",
+                call. = FALSE)
+    }
 
     # Save results if requested.
     if (!is.null(save_path)) {

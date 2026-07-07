@@ -146,6 +146,15 @@ parSim_dt <- function(
     }
 
     dt <- data.table::as.data.table(tryRes)
+
+    # The columns id/error/message are reserved for the output; rename
+    # clashing user columns to <name>_result (one aggregated warning after
+    # collection):
+    clash <- intersect(names(dt), c("id", "error", "message"))
+    if (length(clash) > 0) {
+      data.table::setnames(dt, clash, paste0(clash, "_result"))
+    }
+
     dt[, `:=`(id = AllConditions$id[i], error = FALSE, message = NA_character_)]
     dt
   }
@@ -238,9 +247,29 @@ parSim_dt <- function(
   Results <- data.table::rbindlist(Results, fill = TRUE)
   Results[, message := as.character(message)]
 
+  # One aggregated warning for reserved-column renames (see task above):
+  renamed <- intersect(names(Results), c("id_result", "error_result", "message_result"))
+  if (length(renamed) > 0) {
+    warning("The simulation expression returned reserved column name(s) ",
+            paste0("'", sub("_result$", "", renamed), "'", collapse = ", "),
+            "; they were renamed to ", paste0("'", renamed, "'", collapse = ", "), ".",
+            call. = FALSE)
+  }
+
   # left-join results to conditions and restore the expanded-design order:
   AllResults <- merge(AllConditions, Results, by = "id", all.x = TRUE)
   data.table::setorder(AllResults, id)
+
+  # Warn when result columns duplicated design-variable names (the merge
+  # suffixes them .x/.y):
+  sufBase <- sub("\\.(x|y)$", "", grep("\\.(x|y)$", names(AllResults), value = TRUE))
+  dupBase <- unique(sufBase[duplicated(sufBase)])
+  if (length(dupBase) > 0) {
+    warning("The simulation expression returned column(s) with the same name as design condition(s): ",
+            paste0("'", dupBase, "'", collapse = ", "),
+            ". The design columns carry suffix '.x', the returned columns '.y'.",
+            call. = FALSE)
+  }
 
   if (write) {
     txtFile <- if (!missing(name)) paste0(name, ".txt") else tempfile(pattern = "parSim", fileext = ".txt")

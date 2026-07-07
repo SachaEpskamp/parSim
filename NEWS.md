@@ -31,6 +31,11 @@
 
 ## Bug fixes
 
+* User result columns named `id`, `error` or `message` are no longer silently
+  overwritten: they are renamed to `<name>_result` with a warning. A warning is
+  also given when a result column duplicates a design-condition name (the join
+  then suffixes the columns `.x`/`.y`).
+
 * `export`/`env` now also work when running sequentially (`nCores = 1`): the
   simulation expression (and `exclude`) are evaluated with the caller's
   environment as enclosure, so objects local to a calling function are found
