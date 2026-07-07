@@ -140,11 +140,6 @@ the output contains: \code{id} (integer identifying the design row),
 \code{message} (the error message, \code{NA} on success). Check
 \code{any(output$error)} after a run. When \code{write = TRUE} the results
 are also written to a file and returned invisibly.
-}} with the results of each
-iteration in each row, including the columns \code{replication}, \code{id},
-\code{error} (logical), and \code{message} (the error message for failed rows,
-\code{NA} on success). When \code{write = TRUE} the same data.table is returned
-invisibly (in addition to being written to file).
 }
 
 \author{
