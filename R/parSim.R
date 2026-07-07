@@ -161,16 +161,17 @@ parSim <- function(
         set.seed(seed, kind = "L'Ecuyer-CMRG")
     }
 
-    # Randomize the order of the conditions.
+    # Attach an ID to each condition (in expanded-design order, BEFORE the
+    # shuffle, so the output can be returned in deterministic design order):
+    design$id <- conditions
+
+    # Randomize the order of the conditions (load balancing).
     if (n_conditions > 1) {
         # Randomize.
         design <- design[sample(conditions), ]
     }
 
-    # Attach an ID to each condition.
-    design$id <- conditions
-
-    # Derive one RNG substream per design row (indexed by its id), so every
+    # Derive one RNG substream per design row (indexed by its pre-shuffle id), so every
     # condition draws from its own reproducible stream no matter which worker
     # (or the main process) evaluates it:
     streams <- NULL
@@ -358,9 +359,12 @@ parSim <- function(
     # Bind them all.
     results <- dplyr::bind_rows(results)
 
-    # Left join the results to the design by ID.
+    # Left join the results to the design by ID and restore the
+    # expanded-design order:
     output <- design %>%
         dplyr::left_join(results, by = "id")
+    output <- output[order(output$id), , drop = FALSE]
+    rownames(output) <- NULL
 
     # Save results if requested.
     if (!is.null(save_path)) {

@@ -2,6 +2,11 @@
 
 ## Breaking changes / deprecations
 
+* Output rows are now returned in deterministic expanded-design order (sorted
+  by the `id` column, which is assigned before the load-balancing shuffle);
+  previously rows came back in randomized order. The `id`, `error` and
+  `message` output columns are now documented.
+
 * `parSim_dt()` now takes `replications` and `progress` as its primary
   arguments (harmonizing its API with `parSim()`). The old `reps` and
   `progressbar` arguments are deprecated: they are still accepted but issue a

@@ -135,7 +135,13 @@ parSim(
 \value{
     The \code{\link{parSim}} function returns a
     \code{\link[base:data.frame]{base::data.frame}} with the results of every
-    iteration as a row.
+    iteration as a row, sorted by the \code{id} column (the row number of the
+    condition in the fully expanded design). Besides the simulation conditions,
+    the \code{replication} number and the columns returned by
+    \code{expression}, the output contains: \code{id} (integer identifying the
+    design row), \code{error} (logical; \code{TRUE} if the expression threw an
+    error for this condition) and \code{message} (the error message, \code{NA}
+    on success). Check \code{any(output$error)} after a run.
 }
 
 \description{

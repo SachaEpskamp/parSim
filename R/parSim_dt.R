@@ -102,13 +102,14 @@ parSim_dt <- function(
     set.seed(seed, kind = "L'Ecuyer-CMRG")
   }
 
-  # Randomize:
+  # Attach an ID to each condition (in expanded-design order, BEFORE the
+  # shuffle, so the output can be returned in deterministic design order):
+  AllConditions[, id := seq_len(totCondition)]
+
+  # Randomize (load balancing):
   if (totCondition > 1) {
     AllConditions <- AllConditions[sample(seq_len(totCondition)), ]
   }
-
-  # Total conditions:
-  AllConditions[, id := seq_len(totCondition)]
 
   # One RNG substream per design row (indexed by id):
   streams <- NULL
@@ -237,8 +238,9 @@ parSim_dt <- function(
   Results <- data.table::rbindlist(Results, fill = TRUE)
   Results[, message := as.character(message)]
 
-  # left-join results to conditions
+  # left-join results to conditions and restore the expanded-design order:
   AllResults <- merge(AllConditions, Results, by = "id", all.x = TRUE)
+  data.table::setorder(AllResults, id)
 
   if (write) {
     txtFile <- if (!missing(name)) paste0(name, ".txt") else tempfile(pattern = "parSim", fileext = ".txt")
