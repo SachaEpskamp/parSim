@@ -61,9 +61,10 @@ parSim_dt(
     }
 
     \item{exclude}{
-        A character vector of logical expressions to exclude cases. These are
-        combined with \code{&} and evaluated in the context of the simulation
-        design.
+        A character vector of logical expressions indicating simulation
+        conditions to exclude. The expressions are combined with \code{|}
+        (OR) and evaluated in the context of the simulation design: any row
+        matching at least one expression is removed.
     }
 
     \item{debug}{

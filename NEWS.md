@@ -1,3 +1,13 @@
+# parSim 0.3.1 (development)
+
+## Bug fixes
+
+* BREAKING BUG FIX: the `exclude` argument of `parSim_dt()` did the opposite of
+  its documentation -- it *kept* only the rows matching the exclusion
+  expressions instead of removing them. Matching rows are now removed. Multiple
+  expressions are combined with OR (any match removes the row); previously they
+  were combined with AND.
+
 # parSim 0.3.0
 
 ## Breaking changes

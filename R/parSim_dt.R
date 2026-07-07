@@ -25,9 +25,12 @@ parSim_dt <- function(
   # Expand all conditions:
   AllConditions <- data.table::data.table(do.call(expand.grid, c(dots, list(rep = seq_len(reps), stringsAsFactors = FALSE))))
 
-  # Exclude cases:
+  # Exclude cases: each element of 'exclude' is a logical expression; any row
+  # matching at least one of them is REMOVED (elements are combined with OR,
+  # each wrapped in parentheses so operator precedence cannot leak across):
   if (!missing(exclude)) {
-    AllConditions <- AllConditions[eval(parse(text = paste(exclude, collapse = " & ")))]
+    keep <- !AllConditions[, eval(parse(text = paste0("(", paste(exclude, collapse = ") | ("), ")")))]
+    AllConditions <- AllConditions[keep]
   }
 
   # Randomize:
