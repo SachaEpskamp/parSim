@@ -1,6 +1,6 @@
 # Regression tests for parSim (plain stopifnot-style, no test framework).
-# Blocks mirror the audit items in fable_audit_parSim.md. Parallel (nCores=2)
-# tests are skipped on CRAN; set NOT_CRAN=true to run everything.
+# Parallel (nCores=2) tests are skipped on CRAN; set NOT_CRAN=true to run
+# everything.
 library(parSim)
 options(warn = 1)
 

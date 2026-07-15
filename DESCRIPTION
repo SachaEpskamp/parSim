@@ -28,6 +28,12 @@ Authors@R:
                 ORCID = "0000-0002-6460-0107",
                 Website = "https://mihaiconstantin.com"
             )
+        ),
+        person(
+            given = "Adela Maria",
+            family = "Isvoranu",
+            role = c("ctb"),
+            email = "isvoranu.adela@gmail.com"
         )
     )
 Description: Perform flexible simulation studies using one or multiple computer
