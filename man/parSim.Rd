@@ -206,7 +206,7 @@ results <- parSim(
     },
 
     # The number of replications.
-    replications = 100,
+    replications = 10,
 
     # The conditions to exclude.
     exclude = sample_size == 50 | beta <= 0.5,
@@ -230,6 +230,7 @@ results <- parSim(
 # Print the head of the results.
 head(results)
 
+\donttest{
 # Configure the progress bar.
 configure_bar(
     type = "modern",
@@ -290,6 +291,7 @@ results <- parSim(
 
 # Print the tail of the results.
 tail(results)
+}
 }
 
 \seealso{

@@ -1,4 +1,4 @@
-# parSim 0.3.1 (development)
+# parSim 0.4.0
 
 ## Breaking changes / deprecations
 
@@ -62,6 +62,10 @@
   named `cores` (e.g. `cores = c(1, 2, 4)`) is kept as a condition. `nCores`
   is validated to be a single integer >= 1.
 * Clear, early error messages for invalid input: zero-length simulation conditions, `replications < 1`, and designs left empty after `exclude` (previously crashed later with unrelated-looking errors).
+
+# parSim 0.3.1
+
+* Reduced example runtime to avoid CRAN check NOTEs.
 
 # parSim 0.3.0
 
