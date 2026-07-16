@@ -12,10 +12,10 @@ vignette: >
 ## Introduction
 
 In this short vignette we illustrate the main steps for using the `parSim`
-package to execute a simulation on a supercomputer. We use as example the job
-scheduler employed by the Dutch [Lisa Computing
-Cluster](https://www.surf.nl/en/lisa-computing-cluster-extra-computing-power-for-research),
-however the steps are similar for other supercomputers.
+package to execute a simulation on a supercomputer. We use as example a cluster
+running the [Slurm](https://slurm.schedmd.com) job scheduler, which is the
+scheduler most commonly found on academic clusters, however the steps are
+similar for other supercomputers and schedulers.
 
 ## Writing the Simulation Script
 
@@ -117,10 +117,11 @@ At a bare minimum, we need to:
   (i.e., via the `packages` argument) that are needed for the simulation script
   to run. In the example above, we need to export the `bias` function, so we
   would set `exports = c("bias")`, and no additional packages are required.
-- Decide on the number of `cores` to use for the simulation. The Lisa Compute
-  Cluster has `16` cores per node, so we could set `cores = 15`. Note that the
-  parallel backend [`parabar`](https://parabar.mihaiconstantin.com) used by
-  `parSim` will ensure that at lease one core is available for the main process.
+- Decide on the number of `cores` to use for the simulation. Set this to match
+  the number of cores per node on your cluster; for instance, on a node with
+  `16` cores we could set `cores = 15`. Note that the parallel backend
+  [`parabar`](https://parabar.mihaiconstantin.com) used by `parSim` will ensure
+  that at lease one core is available for the main process.
 - Finally, we need to save the results of each `parSim` function execution to a
   file. Considering the intricacies of supercomputers, it is best to specify the
   file name and path ourselves. To do so, we can pass the file name as a string
@@ -218,7 +219,7 @@ that specifies the resources needed for the job. For more information on the
 specifics of the job script, please refer to the documentation of the
 supercomputer you are using.
 
-Let's assume we are using the Lisa Compute Cluster and our `simulation.R` script
+Let's assume we are using a Slurm-based cluster and our `simulation.R` script
 is located in the `~/simulation-example` directory on the `login` node. Then,
 our job script could look like the following:
 
@@ -228,12 +229,11 @@ our job script could look like the following:
 #SBATCH -p normal
 #SBATCH -t 01:00:00
 
-# Load modules.
-module load 2021
+# Load modules (the exact module names vary between clusters).
 module load R/4.1.0-foss-2021a
 
 # Set the user.
-export USERNAME=mihaiconstantin
+export USERNAME=your-username
 
 # Define the simulation path on the login node.
 export SIM_DIR=$HOME/simulation-example
@@ -262,7 +262,7 @@ Please make sure to adjust the job script above to:
 
 - Load the correct version of `R`.
 - Set the correct paths for the `SIM_DIR` and `TMP_DIR` variables.
-- Replace `mihaiconstantin` with your username for the `USERNAME` variable.
+- Replace `your-username` with your actual username for the `USERNAME` variable.
 - Adjust the `#SBATCH` directives to match the resources needed for your job.
   This part is crucial if you want to avoid having your job killed by the
   scheduler. For instance, the `#SBATCH -t 01:00:00` directive refers to the
@@ -274,8 +274,8 @@ Please make sure to adjust the job script above to:
 
 At this point, we are ready to submit the job to the supercomputer. To do so, we
 can dispatch an array of jobs using the `sbatch` command. For instance, to
-submit the job script above `100` times to the Lisa Compute Cluster, we can use
-the following command:
+submit the job script above `100` times to the cluster, we can use the
+following command:
 
 ```bash
 sbatch --array=1-100 job.sh
@@ -286,11 +286,11 @@ with a different task ID. The results of each replication will be saved in a
 unique file in the `$SIM_DIR/output` directory. In total, each simulation
 condition will be replicated `1000 * 100 = 100000` times.
 
-Assuming the username `mihaiconstantin`, we can monitor the job queue using the
+Assuming the username `your-username`, we can monitor the job queue using the
 following command:
 
 ```bash
-squeue -u mihaiconstantin
+squeue -u your-username
 ```
 
 Finally, we can cancel a job (i.e., or task in an job array) using the `scancel`
@@ -305,8 +305,8 @@ If `job_id` is an array of tasks (i.e., `job_id_1`, `job_id_2`, etc.), then
 
 ## Folder Structure
 
-Following the example above, our `~/simulation-example` directory on the Lisa
-Compute Cluster should have the following structure:
+Following the example above, our `~/simulation-example` directory on the
+cluster should have the following structure:
 
 ```txt
 ~/simulation-example/
@@ -319,7 +319,7 @@ Compute Cluster should have the following structure:
 
 Once the job is completed, we can download the results from the supercomputer to
 our local machine using the `scp` command. For instance, to download the results
-from the Lisa Compute Cluster, we can use the following command:
+from the cluster, we can use the following command:
 
 ```bash
 # Navigate on your local machine to a directory of your choice.
@@ -329,11 +329,11 @@ cd ~/Downloads/simulation-results/
 mkdir output
 
 # Download the results.
-scp mihaiconstantin@lisa.surfsara.nl:~/simulation-example/output/simulation_results* ./output/
+scp your-username@cluster-address:~/simulation-example/output/simulation_results* ./output/
 ```
 
-*Note.* Make sure to replace `mihaiconstantin` with your username and adjust the
-paths accordingly.
+*Note.* Make sure to replace `your-username` and `cluster-address` with the
+username and login address of your cluster, and adjust the paths accordingly.
 
 ## Processing the Results
 
