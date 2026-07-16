@@ -10,3 +10,4 @@
 ^temp.*\..*$
 ^examples$
 ^\.claude$
+^cran-comments\.md$
